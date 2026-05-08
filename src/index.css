@@ -17,6 +17,12 @@
 @layer base {
   body {
     @apply bg-bg-primary text-slate-50 antialiased selection:bg-brand-primary/30;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  /* 修复原生下拉菜单在某些浏览器下的字体颜色问题 */
+  option {
+    @apply bg-bg-secondary text-white;
   }
 }
 
