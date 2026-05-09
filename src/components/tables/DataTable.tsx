@@ -81,24 +81,15 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
 
   return (
     <div className="glass-card p-8 mb-6 overflow-hidden relative min-h-[300px]">
-      <div className="flex flex-col gap-4 mb-6">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg md:text-xl font-black text-white tracking-tighter">{title}</h2>
-          {/* Mobile Search - Compact */}
-          <div className="relative flex-1 max-w-[200px] md:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
-            <input 
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              placeholder="搜索..." 
-              className="w-full bg-white/5 border border-white/5 rounded-xl pl-9 pr-4 py-1.5 text-xs outline-none focus:border-brand-primary/50 transition-all text-white placeholder:text-slate-600" 
-            />
-          </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <h2 className="text-lg md:text-xl font-black text-white tracking-tighter whitespace-nowrap">{title}</h2>
+          {/* Categories - Horizontal Scroll on Mobile, hidden or small on desktop if needed */}
         </div>
 
         <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
-          {/* Date Selector Group */}
-          <div className="flex flex-1 items-center gap-2 bg-white/[0.03] p-1 rounded-xl border border-white/5">
+          {/* Date Selector Group - Compact on Desktop */}
+          <div className="flex items-center gap-2 bg-white/[0.03] p-1 rounded-xl border border-white/5 md:w-auto">
             <div className="flex gap-0.5 border-r border-white/10 pr-1 shrink-0">
               {[
                 { label: '今日', getRange: () => { const d = new Date().toISOString().split('T')[0]; return [d, d]; } },
@@ -127,19 +118,19 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
               ))}
             </div>
             
-            <div className="flex flex-1 items-center gap-1 min-w-0">
+            <div className="flex items-center gap-1 min-w-0">
               <input 
                 type="date" 
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
-                className="bg-transparent border-none px-1 py-1 text-[10px] outline-none text-slate-300 w-full [color-scheme:dark]" 
+                className="bg-transparent border-none px-1 py-1 text-[10px] outline-none text-slate-300 w-[100px] md:w-[110px] [color-scheme:dark]" 
               />
               <span className="text-slate-700 text-[10px] shrink-0">→</span>
               <input 
                 type="date" 
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                className="bg-transparent border-none px-1 py-1 text-[10px] outline-none text-slate-300 w-full [color-scheme:dark]" 
+                className="bg-transparent border-none px-1 py-1 text-[10px] outline-none text-slate-300 w-[100px] md:w-[110px] [color-scheme:dark]" 
               />
               {(startDate || endDate) && (
                 <button 
@@ -151,7 +142,19 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
               )}
             </div>
           </div>
+
+          {/* Search - Compact Width on Desktop */}
+          <div className="relative w-full md:w-60">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+            <input 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="搜索..." 
+              className="w-full bg-white/5 border border-white/5 rounded-xl pl-9 pr-4 py-1.5 text-xs outline-none focus:border-brand-primary/50 transition-all text-white placeholder:text-slate-600" 
+            />
+          </div>
         </div>
+      </div>
 
         {/* Categories - Horizontal Scroll on Mobile */}
         {categories && (
@@ -171,7 +174,6 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
             ))}
           </div>
         )}
-      </div>
 
       {/* Global Summary Cards */}
       <div className={`grid ${totalQty > 0 ? 'grid-cols-2' : 'grid-cols-1'} gap-4 mb-8 animate-in fade-in slide-in-from-top-2 duration-300`}>
