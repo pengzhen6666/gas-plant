@@ -84,8 +84,9 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-xl font-semibold text-white">{title}</h2>
         <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/5">
-            <div className="flex gap-1 mr-2 px-1">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 bg-white/5 p-1.5 md:p-1 rounded-2xl border border-white/5 w-full md:w-auto">
+            {/* Quick Filters */}
+            <div className="flex gap-1 px-1 justify-center md:justify-start border-b md:border-b-0 md:border-r border-white/5 pb-1 md:pb-0 md:mr-2 md:pr-1">
               {[
                 { label: '今日', getRange: () => { const d = new Date().toISOString().split('T')[0]; return [d, d]; } },
                 { label: '本月', getRange: () => { 
@@ -106,37 +107,39 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
                     setStartDate(s);
                     setEndDate(e);
                   }}
-                  className="px-2 py-1 text-[10px] text-slate-500 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                  className="px-2.5 py-1 text-[10px] text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
                 >
                   {range.label}
                 </button>
               ))}
             </div>
-            <div className="h-4 w-px bg-white/10 mx-1" />
-            <div className="flex items-center gap-1">
+            
+            {/* Inputs */}
+            <div className="flex items-center justify-between md:justify-start gap-1 px-1">
               <input 
                 type="date" 
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
-                className="bg-transparent border-none px-2 py-1 text-xs outline-none text-slate-300 w-[120px] [color-scheme:dark]" 
+                className="bg-transparent border-none px-2 py-1 text-xs outline-none text-slate-300 w-full md:w-[120px] [color-scheme:dark]" 
               />
-              <span className="text-slate-600 text-[10px]">至</span>
+              <span className="text-slate-600 text-[10px] shrink-0">至</span>
               <input 
                 type="date" 
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                className="bg-transparent border-none px-2 py-1 text-xs outline-none text-slate-300 w-[120px] [color-scheme:dark]" 
+                className="bg-transparent border-none px-2 py-1 text-xs outline-none text-slate-300 w-full md:w-[120px] [color-scheme:dark]" 
               />
+              
+              {(startDate || endDate) && (
+                <button 
+                  onClick={() => { setStartDate(''); setEndDate(''); }}
+                  className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors"
+                  title="清除日期"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
-            {(startDate || endDate) && (
-              <button 
-                onClick={() => { setStartDate(''); setEndDate(''); }}
-                className="ml-1 p-1.5 text-slate-500 hover:text-rose-400 transition-colors"
-                title="清除日期"
-              >
-                <X size={14} />
-              </button>
-            )}
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />

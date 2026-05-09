@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Filter, Search, Loader2, Wallet, Edit2, Trash2, Package } from 'lucide-react';
+import { Filter, Search, Loader2, Wallet, Edit2, Trash2, Package, PlusCircle } from 'lucide-react';
 import { MerchantExpandableRow } from './MerchantExpandableRow';
 import { kgToJin } from '../../utils/index';
 import type { Sale, Transaction, MerchantSummary, SettlementType } from '../../types/index';
@@ -162,52 +162,57 @@ export const SalesTable = ({ data, transactions, isLoading, onEdit, onDelete, on
                 </tbody>
               </table>
 
-              {/* Mobile Card View */}
+              {/* Mobile Card View (History) */}
               <div className="md:hidden space-y-4">
                 {filteredData.map((sale) => {
                   const debt = Number(sale.total_price) - Number(sale.paid_amount);
                   return (
-                    <div key={sale.id} className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-3">
+                    <div key={sale.id} className="bg-white/5 rounded-3xl p-5 border border-white/5 space-y-4 shadow-xl">
                       <div className="flex justify-between items-start">
                         <div className="min-w-0 flex-1">
-                          <div className="font-bold text-white truncate">{sale.customer_name}</div>
-                          <div className="text-[10px] text-slate-500 mt-1">{sale.delivery_date} · {sale.phone || '无电话'}</div>
+                          <div className="text-lg font-black text-white truncate tracking-tight">{sale.customer_name}</div>
+                          <div className="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest">{sale.delivery_date} · {sale.phone || '暂无联系方式'}</div>
                         </div>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          sale.status === '已付款' ? 'bg-emerald-400/10 text-emerald-400' : 
-                          sale.status === '部分付款' ? 'bg-amber-400/10 text-amber-400' : 'bg-rose-400/10 text-rose-400'
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                          sale.status === '已付款' ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/20' : 
+                          sale.status === '部分付款' ? 'bg-amber-400/10 text-amber-400 border border-amber-400/20' : 'bg-rose-400/10 text-rose-400 border border-rose-400/20'
                         }`}>{sale.status}</span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="bg-black/20 p-2 rounded-lg border border-white/5">
-                          <p className="text-slate-500 text-[9px] uppercase font-bold mb-1">订油量</p>
-                          <p className="text-white font-mono">{sale.quantity}kg ({kgToJin(sale.quantity)}斤)</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white/5 p-3 rounded-2xl border border-white/5">
+                          <p className="text-slate-500 text-[9px] uppercase font-bold mb-1 tracking-widest">本次订油</p>
+                          <p className="text-white font-black text-sm">{sale.quantity} <span className="text-[10px] font-normal text-slate-500">kg</span></p>
+                          <p className="text-[10px] text-brand-primary font-medium mt-0.5">{kgToJin(sale.quantity)} 斤</p>
                         </div>
-                        <div className="bg-black/20 p-2 rounded-lg border border-white/5">
-                          <p className="text-slate-500 text-[9px] uppercase font-bold mb-1">剩余欠款</p>
-                          <p className="text-rose-400 font-bold">¥{Math.max(0, debt).toLocaleString()}</p>
+                        <div className={`p-3 rounded-2xl border ${debt > 0.01 ? 'bg-rose-400/5 border-rose-400/10' : 'bg-emerald-400/5 border-emerald-400/10'}`}>
+                          <p className="text-slate-500 text-[9px] uppercase font-bold mb-1 tracking-widest">当前欠款</p>
+                          <p className={`font-black text-sm ${debt > 0.01 ? 'text-rose-400' : 'text-emerald-400'}`}>¥{Math.max(0, debt).toLocaleString()}</p>
+                          <p className="text-[10px] text-slate-600 mt-0.5">总额: ¥{Number(sale.total_price).toLocaleString()}</p>
                         </div>
                       </div>
 
                       {sale.assigned_equipment && (
-                        <div className="flex items-center gap-1 text-[10px] text-brand-primary">
-                           <Package size={10} /> 已配: {sale.assigned_equipment}
+                        <div className="flex items-center gap-2 px-3 py-2 bg-brand-primary/5 rounded-xl border border-brand-primary/10 text-[10px] text-brand-primary font-bold">
+                           <Package size={12} /> 配备设备: {sale.assigned_equipment}
                         </div>
                       )}
 
-                      <div className="flex justify-between items-center pt-3 border-t border-white/5">
+                      <div className="flex justify-between items-center pt-2 border-t border-white/5">
                         <div className="flex gap-4">
-                          <button onClick={() => onEdit(sale)} className="text-xs text-slate-400 flex items-center gap-1 hover:text-brand-primary">
-                            <Edit2 size={12} /> 编辑
+                          <button onClick={() => onEdit(sale)} className="p-2 bg-white/5 rounded-full text-slate-400 hover:text-brand-primary transition-colors">
+                            <Edit2 size={16} />
                           </button>
-                          <button onClick={() => onDelete(sale.id)} className="text-xs text-slate-400 flex items-center gap-1 hover:text-rose-400">
-                            <Trash2 size={12} /> 删除
+                          <button onClick={() => onDelete(sale.id)} className="p-2 bg-white/5 rounded-full text-slate-400 hover:text-rose-400 transition-colors">
+                            <Trash2 size={16} />
                           </button>
                         </div>
                         {debt > 0.01 && (
-                          <button onClick={() => onQuickPay(sale)} className="px-3 py-1 bg-brand-primary text-white text-xs font-bold rounded-lg shadow-lg shadow-brand-primary/20">
-                            去还款
+                          <button 
+                            onClick={() => onQuickPay(sale)} 
+                            className="px-6 py-2.5 bg-brand-primary text-white text-xs font-black rounded-full shadow-lg shadow-brand-primary/30 active:scale-95 transition-transform"
+                          >
+                            立即还款
                           </button>
                         )}
                       </div>
@@ -217,29 +222,96 @@ export const SalesTable = ({ data, transactions, isLoading, onEdit, onDelete, on
               </div>
             </>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="text-left border-bottom border-white/5 text-slate-400 text-sm">
-                  <th className="pb-4 px-4">商户基本信息</th>
-                  <th className="pb-4 px-2 text-right">累计订货总量</th>
-                  <th className="pb-4 px-2 text-right">已收总计</th>
-                  <th className="pb-4 px-2 text-right">累计总欠款</th>
-                  <th className="pb-4 px-2 text-center">还款进度</th>
-                  <th className="pb-4 px-4 text-right">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {merchantStats.map((stat, idx) => (
-                  <MerchantExpandableRow 
-                    key={idx} 
-                    stat={stat} 
-                    sales={data} 
-                    transactions={transactions}
-                    onNewOrder={onNewOrder}
-                  />
-                ))}
-              </tbody>
-            </table>
+            <>
+              {/* Desktop View (Overview) */}
+              <table className="hidden md:table w-full">
+                <thead>
+                  <tr className="text-left border-bottom border-white/5 text-slate-400 text-sm">
+                    <th className="pb-4 px-4">商户基本信息</th>
+                    <th className="pb-4 px-2 text-right">累计订货总量</th>
+                    <th className="pb-4 px-2 text-right">已收总计</th>
+                    <th className="pb-4 px-2 text-right">累计总欠款</th>
+                    <th className="pb-4 px-2 text-center">还款进度</th>
+                    <th className="pb-4 px-4 text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {merchantStats.map((stat, idx) => (
+                    <MerchantExpandableRow 
+                      key={idx} 
+                      stat={stat} 
+                      sales={data} 
+                      transactions={transactions}
+                      onNewOrder={onNewOrder}
+                    />
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Mobile Card View (Overview) */}
+              <div className="md:hidden space-y-4">
+                {merchantStats.map((stat, idx) => {
+                  const payRate = stat.total_amount > 0 ? (stat.total_paid / stat.total_amount) * 100 : 100;
+                  return (
+                    <div key={idx} className="bg-white/5 rounded-3xl p-6 border border-white/5 space-y-5 shadow-2xl relative overflow-hidden group">
+                      {/* Debt Status Badge */}
+                      <div className={`absolute top-0 right-0 px-4 py-1.5 text-[10px] font-black rounded-bl-2xl uppercase tracking-widest ${
+                        stat.total_debt > 0.01 ? 'bg-rose-400 text-white shadow-lg shadow-rose-400/20' : 'bg-emerald-400 text-white shadow-lg shadow-emerald-400/20'
+                      }`}>
+                        {stat.total_debt > 0.01 ? '欠款中' : '已结清'}
+                      </div>
+
+                      <div>
+                        <div className="text-xl font-black text-white tracking-tight">{stat.customer_name}</div>
+                        <div className="text-[10px] text-slate-500 mt-1 font-bold flex items-center gap-2">
+                          <span className="px-1.5 py-0.5 bg-white/10 rounded uppercase">{stat.settlement_type || '未设账期'}</span>
+                          <span>{stat.phone || '无电话'}</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                         <div className="text-center p-2 rounded-2xl bg-white/5 border border-white/5">
+                            <p className="text-[8px] text-slate-500 font-bold uppercase mb-1">总订货</p>
+                            <p className="text-xs font-black text-white">{stat.total_quantity}kg</p>
+                         </div>
+                         <div className="text-center p-2 rounded-2xl bg-white/5 border border-white/5">
+                            <p className="text-[8px] text-slate-500 font-bold uppercase mb-1">总金额</p>
+                            <p className="text-xs font-black text-white">¥{Math.round(stat.total_amount)}</p>
+                         </div>
+                         <div className={`text-center p-2 rounded-2xl border ${stat.total_debt > 0.01 ? 'bg-rose-400/10 border-rose-400/20' : 'bg-emerald-400/10 border-emerald-400/20'}`}>
+                            <p className="text-[8px] text-slate-500 font-bold uppercase mb-1">总欠款</p>
+                            <p className={`text-xs font-black ${stat.total_debt > 0.01 ? 'text-rose-400' : 'text-emerald-400'}`}>¥{Math.round(stat.total_debt)}</p>
+                         </div>
+                      </div>
+
+                      {/* Pay Progress Bar */}
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-[9px] font-black uppercase tracking-tighter">
+                          <span className="text-slate-500">回款进度</span>
+                          <span className={payRate >= 100 ? 'text-emerald-400' : 'text-brand-primary'}>{payRate.toFixed(1)}%</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                           <div className={`h-full transition-all duration-1000 ${payRate >= 100 ? 'bg-emerald-400' : 'bg-brand-primary'}`} style={{ width: `${Math.min(100, payRate)}%` }} />
+                        </div>
+                      </div>
+
+                      {stat.assigned_equipment && (
+                         <div className="text-[10px] text-slate-500 italic bg-black/20 p-2 rounded-xl">
+                            配备：{stat.assigned_equipment}
+                         </div>
+                      )}
+
+                      <button 
+                        onClick={() => onNewOrder(stat.customer_name, stat.phone, stat.settlement_type)}
+                        className="w-full py-3 bg-white/10 hover:bg-white/20 text-white text-xs font-black rounded-2xl transition-all flex items-center justify-center gap-2"
+                      >
+                        <PlusCircle size={14} className="text-brand-primary" /> 再次订货
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </div>
