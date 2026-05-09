@@ -277,6 +277,29 @@ function App() {
   const totalDebt = sales.reduce((sum, s) => sum + (Number(s.total_price) - Number(s.paid_amount)), 0);
   const totalOilSold = sales.reduce((sum, s) => sum + Number(s.quantity), 0);
 
+  // Schema-unified Universal History
+  const universalHistory = useMemo(() => {
+    const tItems = transactions.map(t => ({
+      ...t,
+      source: 'transaction'
+    }));
+    
+    const sItems = sales.map(s => ({
+      id: s.id,
+      date: s.delivery_date,
+      title: `销售订单: ${s.customer_name}`,
+      amount: Number(s.total_price),
+      quantity: s.quantity.toString(),
+      type: '销售录入',
+      notes: s.notes || '',
+      category: s.assigned_equipment || '',
+      source: 'sale',
+      raw: s
+    }));
+
+    return [...tItems, ...sItems].sort((a, b) => b.date.localeCompare(a.date));
+  }, [transactions, sales]);
+
   const merchantSummaries = useMemo(() => {
     const statsMap: Record<string, MerchantSummary> = {};
     sales.forEach(sale => {
@@ -530,7 +553,29 @@ function App() {
             </>
           )}
 
-          {(activeTab === 'fuel' || activeTab === 'stoves' || activeTab === 'history') && (
+            {activeTab === 'history' && (
+              <DataTable 
+                data={universalHistory} 
+                title="全业务历史档案" 
+                isLoading={isLoading} 
+                onEdit={(item: any) => {
+                  if (item.source === 'sale') {
+                    requireAuth(() => openEditModal(item.raw));
+                  } else {
+                    requireAuth(() => openEditModal(item));
+                  }
+                }}
+                onDelete={(id: string, item: any) => {
+                  if (item?.source === 'sale') {
+                    requireAuth(() => deleteSale(id));
+                  } else {
+                    requireAuth(() => deleteTransaction(id));
+                  }
+                }}
+              />
+            )}
+
+          {(activeTab === 'fuel' || activeTab === 'stoves') && (
              <>
                <header className="mb-6 md:mb-10 text-white">
                  <h1 className="text-2xl md:text-3xl font-bold">{menuItems.find(i => i.id === activeTab)?.label}</h1>

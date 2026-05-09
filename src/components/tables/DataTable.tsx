@@ -216,11 +216,18 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
               <tr key={item.id} className="hover:bg-white/5 transition-colors group">
                 <td className="py-4 text-slate-400 text-sm">{item.date}</td>
                 <td className="py-4 flex items-center gap-2">
-                  {item.type === '收入' ? <ArrowUpRight size={14} className="text-emerald-400" /> : <ArrowDownRight size={14} className="text-rose-400" />}
+                  {item.type === '收入' || item.type === '销售录入' ? <ArrowUpRight size={14} className="text-emerald-400" /> : <ArrowDownRight size={14} className="text-rose-400" />}
                   <div>
-                    <span>{item.title}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{item.title}</span>
+                      {item.source === 'sale' && (
+                        <span className="px-1.5 py-0.5 bg-blue-400/10 text-blue-400 text-[9px] rounded-full border border-blue-400/20 font-bold uppercase tracking-wider">
+                          销售单
+                        </span>
+                      )}
+                    </div>
                     {item.category && (
-                      <span className="ml-2 px-1.5 py-0.5 bg-brand-primary/10 text-brand-primary text-[10px] rounded border border-brand-primary/20">
+                      <span className="inline-block mt-1 px-1.5 py-0.5 bg-brand-primary/10 text-brand-primary text-[10px] rounded border border-brand-primary/20">
                         {item.category}
                       </span>
                     )}
@@ -230,11 +237,15 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
                    {formatQty(item.quantity)}
                 </td>
                 <td className="py-4 px-4 text-slate-500 text-xs max-w-[200px] truncate" title={item.notes}>{item.notes || '-'}</td>
-                <td className="py-4 text-right font-bold whitespace-nowrap">¥ {Number(item.amount).toLocaleString()}</td>
+                <td className="py-4 text-right font-bold whitespace-nowrap">
+                   <span className={item.type === '销售录入' ? 'text-blue-400' : ''}>
+                     ¥ {Number(item.amount).toLocaleString()}
+                   </span>
+                </td>
                 <td className="py-4 text-right">
                   <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onClick={() => onEdit(item)} className="p-1 hover:text-brand-primary transition-colors"><Edit2 size={16} /></button>
-                    <button onClick={() => onDelete(item.id)} className="p-1 hover:text-rose-400 transition-colors"><Trash2 size={16} /></button>
+                    <button onClick={() => onDelete(item.id, item)} className="p-1 hover:text-rose-400 transition-colors"><Trash2 size={16} /></button>
                   </div>
                 </td>
               </tr>
@@ -254,14 +265,21 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
           <div key={item.id} className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-3">
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-2">
-                {item.type === '收入' ? <ArrowUpRight size={16} className="text-emerald-400" /> : <ArrowDownRight size={16} className="text-rose-400" />}
+                {item.type === '收入' || item.type === '销售录入' ? <ArrowUpRight size={16} className="text-emerald-400" /> : <ArrowDownRight size={16} className="text-rose-400" />}
                 <div>
-                  <div className="text-sm font-bold text-white">{item.title}</div>
+                  <div className="text-sm font-bold text-white flex items-center gap-2">
+                    {item.title}
+                    {item.source === 'sale' && (
+                      <span className="px-1 py-0.5 bg-blue-400/10 text-blue-400 text-[8px] rounded border border-blue-400/20 uppercase">销售单</span>
+                    )}
+                  </div>
                   <div className="text-[10px] text-slate-500 mt-0.5">{item.date}</div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-base font-black text-white">¥ {Number(item.amount).toLocaleString()}</div>
+                <div className={`text-base font-black ${item.type === '销售录入' ? 'text-blue-400' : 'text-white'}`}>
+                  ¥ {Number(item.amount).toLocaleString()}
+                </div>
                 <div className="text-[10px] text-slate-500">{formatQty(item.quantity)}</div>
               </div>
             </div>
@@ -282,7 +300,7 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
               <button onClick={() => onEdit(item)} className="text-xs text-slate-400 flex items-center gap-1 hover:text-brand-primary">
                 <Edit2 size={14} /> 编辑
               </button>
-              <button onClick={() => onDelete(item.id)} className="text-xs text-slate-400 flex items-center gap-1 hover:text-rose-400">
+              <button onClick={() => onDelete(item.id, item)} className="text-xs text-slate-400 flex items-center gap-1 hover:text-rose-400">
                 <Trash2 size={14} /> 删除
               </button>
             </div>
