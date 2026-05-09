@@ -14,11 +14,13 @@ import {
   BarChart3,
   PieChart,
   History,
-  ArrowUp,
-  ArrowDown,
-  Activity
+  Activity,
+  LogOut,
+  Unlock,
+  Lock
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
+import { LoginModal } from './components/modals/LoginModal';
 
 // --- Types ---
 import type { Transaction, Sale, MerchantSummary, SettlementType } from './types/index';
@@ -45,10 +47,29 @@ function App() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   useEffect(() => {
+    const auth = localStorage.getItem('gus_plant_auth');
+    if (auth === 'true') setIsLoggedIn(true);
     fetchAllData();
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('gus_plant_auth');
+    setIsLoggedIn(false);
+  };
+
+  const requireAuth = (action: () => void) => {
+    if (isLoggedIn) {
+      action();
+    } else {
+      setPendingAction(() => action);
+      setIsLoginModalOpen(true);
+    }
+  };
 
   const fetchAllData = async () => {
     setIsLoading(true);
@@ -305,7 +326,21 @@ function App() {
             </div>
           ))}
         </nav>
-        <div className="mt-auto pt-6 border-t border-white/5">
+        <div className="mt-auto pt-6 border-t border-white/5 space-y-4">
+          {isLoggedIn ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 px-4 py-2 bg-emerald-400/10 text-emerald-400 rounded-xl border border-emerald-400/20 text-xs">
+                <Unlock size={14} /> 管理员: Pz
+              </div>
+              <button onClick={handleLogout} className="nav-item text-rose-400 hover:bg-rose-400/10 border-none">
+                <LogOut size={20} /> <span>退出管理</span>
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => setIsLoginModalOpen(true)} className="nav-item text-brand-primary hover:bg-brand-primary/10 border-none">
+              <Lock size={20} /> <span>管理员登录</span>
+            </button>
+          )}
           <div className="nav-item"><Settings size={20} /> <span>系统设置</span></div>
         </div>
       </aside>
@@ -359,7 +394,7 @@ function App() {
                             </div>
                             {oldestUnpaid && (
                               <button 
-                                onClick={() => openPayModal(oldestUnpaid)}
+                                onClick={() => requireAuth(() => openPayModal(oldestUnpaid))}
                                 className="flex items-center gap-1 mt-1 px-2 py-1 bg-brand-primary/20 text-brand-primary text-[10px] font-bold rounded-md hover:bg-brand-primary hover:text-white transition-all md:opacity-0 md:group-hover:opacity-100"
                               >
                                 <Wallet size={10} /> 录入还款
@@ -399,7 +434,15 @@ function App() {
                 <h1 className="text-2xl md:text-3xl font-bold">商户中心</h1>
                 <p className="text-slate-400 text-sm mt-1">管理商家订货记录与进货表</p>
               </header>
-              <SalesTable data={sales} transactions={transactions} isLoading={isLoading} onEdit={openEditModal} onDelete={deleteSale} onQuickPay={openPayModal} onNewOrder={handleNewOrder} />
+              <SalesTable 
+                data={sales} 
+                transactions={transactions} 
+                isLoading={isLoading} 
+                onEdit={(data) => requireAuth(() => openEditModal(data))} 
+                onDelete={(id) => requireAuth(() => deleteSale(id))} 
+                onQuickPay={(sale) => requireAuth(() => openPayModal(sale))} 
+                onNewOrder={(name, phone, type) => requireAuth(() => handleNewOrder(name, phone, type))} 
+              />
             </>
           )}
 
@@ -475,7 +518,13 @@ function App() {
                 </div>
               </div>
 
-              <DataTable data={transactions} title="详细收支流水" isLoading={isLoading} onEdit={openEditModal} onDelete={deleteTransaction} />
+              <DataTable 
+                data={transactions} 
+                title="详细收支流水" 
+                isLoading={isLoading} 
+                onEdit={(data) => requireAuth(() => openEditModal(data))} 
+                onDelete={(id) => requireAuth(() => deleteTransaction(id))} 
+              />
             </>
           )}
 
@@ -485,7 +534,14 @@ function App() {
                  <h1 className="text-2xl md:text-3xl font-bold">{menuItems.find(i => i.id === activeTab)?.label}</h1>
                  <p className="text-slate-400 text-sm mt-1">管理相关明细</p>
                </header>
-               <DataTable data={transactions} title="记录列表" isLoading={isLoading} filterType={activeTab === 'fuel' ? '燃油采购' : activeTab === 'stoves' ? '设备采购' : undefined} onEdit={openEditModal} onDelete={deleteTransaction} />
+                <DataTable 
+                  data={transactions} 
+                  title="记录列表" 
+                  isLoading={isLoading} 
+                  filterType={activeTab === 'fuel' ? '燃油采购' : activeTab === 'stoves' ? '设备采购' : undefined} 
+                  onEdit={(data) => requireAuth(() => openEditModal(data))} 
+                  onDelete={(id) => requireAuth(() => deleteTransaction(id))} 
+                />
              </>
           )}
         </div>
@@ -493,7 +549,7 @@ function App() {
 
       <button 
         className="fixed bottom-20 md:bottom-10 right-6 md:right-10 btn-primary p-4 md:px-8 md:py-4 rounded-full shadow-2xl shadow-brand-primary/40 z-50 group"
-        onClick={() => { setPrefillData(null); setEditData(null); setIsModalOpen(true); }}
+        onClick={() => requireAuth(() => { setPrefillData(null); setEditData(null); setIsModalOpen(true); })}
       >
         <PlusCircle size={24} className="group-hover:rotate-90 transition-transform duration-300" /> 
         <span className="hidden md:inline text-lg ml-2">新增记录</span>
@@ -501,6 +557,19 @@ function App() {
 
       <RecordModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditData(null); setPrefillData(null); }} onAddTransaction={addTransaction} onAddSale={addSale} onUpdateTransaction={updateTransaction} onUpdateSale={updateSale} isSubmitting={isSubmitting} editData={editData} prefillData={prefillData} />
       <PaymentModal isOpen={isPayModalOpen} onClose={() => { setIsPayModalOpen(false); setSelectedSale(null); }} sale={selectedSale} onProcessPayment={processPayment} isSubmitting={isSubmitting} />
+      
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+        onLogin={() => {
+          setIsLoggedIn(true);
+          setIsLoginModalOpen(false);
+          if (pendingAction) {
+            pendingAction();
+            setPendingAction(null);
+          }
+        }} 
+      />
     </div>
   );
 }
