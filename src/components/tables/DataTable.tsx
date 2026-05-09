@@ -49,7 +49,16 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
     return result;
   }, [data, filterType, searchTerm, selectedCategory, startDate, endDate]);
 
-  const totalAmount = useMemo(() => filteredData.reduce((sum: number, item: any) => sum + Number(item.amount), 0), [filteredData]);
+  const totalAmount = useMemo(() => {
+    return filteredData.reduce((sum: number, item: any) => {
+      const amount = Number(item.amount);
+      // '收入' is positive, others (支出, 燃油采购, 设备采购) are negative
+      if (item.type === '收入') {
+        return sum + amount;
+      }
+      return sum - amount;
+    }, 0);
+  }, [filteredData]);
   const totalQty = useMemo(() => {
     return filteredData.reduce((sum: number, item: any) => {
       const qStr = (item.quantity || '0').toString().replace(/[^\d.]/g, '');
@@ -126,7 +135,9 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
             <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">
               {selectedCategory === '全部' ? '筛选范围内总额' : `${selectedCategory}总额`}
             </p>
-            <p className="text-2xl font-black text-white">¥ {totalAmount.toLocaleString()}</p>
+            <p className={`text-2xl font-black ${totalAmount >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              ¥ {totalAmount.toLocaleString()}
+            </p>
          </div>
          {totalQty > 0 && (
            <div className="p-4 bg-brand-primary/5 rounded-2xl border border-brand-primary/10">
