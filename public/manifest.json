@@ -1,0 +1,16 @@
+{
+  "short_name": "GUS记账",
+  "name": "GUS PLANT 财务管理系统",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/5551/5551244.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0f172a",
+  "background_color": "#0f172a"
+}
