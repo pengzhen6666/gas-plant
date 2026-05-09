@@ -19,9 +19,16 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
       );
     }
 
-    // 2. Category Filter (Smart for Equipment)
-    if (filterType === '设备采购' && selectedCategory !== '全部') {
+    // 2. Global Category Filter
+    if (selectedCategory !== '全部') {
       result = result.filter((item: any) => {
+        if (selectedCategory === '燃油') {
+          return item.type === '燃油采购';
+        }
+        if (selectedCategory === '日常收支') {
+          return item.type === '收入' || item.type === '支出';
+        }
+        // Match specific equipment categories
         const matchCategory = item.category === selectedCategory;
         const matchKeyword = (item.title && item.title.includes(selectedCategory));
         return matchCategory || matchKeyword;
@@ -47,6 +54,18 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
       return sum + (isNaN(qNum) ? 0 : qNum);
     }, 0);
   }, [filteredData]);
+
+  // Determine categories to show based on view
+  const categories = useMemo(() => {
+    if (filterType === '设备采购') {
+      return ['全部', '油箱', '炉灶', '煲仔炉', '汤炉', '蒸柜', '运费', '其他配件'];
+    }
+    if (filterType === '燃油采购') {
+      return null;
+    }
+    // Accounting / History views
+    return ['全部', '燃油', '油箱', '炉灶', '煲仔炉', '汤炉', '蒸柜', '运费', '其他配件', '日常收支'];
+  }, [filterType]);
 
   return (
     <div className="glass-card p-8 mb-6 overflow-hidden relative min-h-[300px]">
@@ -80,9 +99,9 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
         </div>
       </div>
 
-      {filterType === '设备采购' && (
+      {categories && (
         <div className="flex flex-wrap gap-2 mb-6">
-          {['全部', '油箱', '炉灶', '煲仔炉', '汤炉', '蒸柜', '运费', '其他配件'].map(cat => (
+          {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
