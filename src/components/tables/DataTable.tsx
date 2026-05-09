@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, Loader2, ArrowUpRight, ArrowDownRight, Edit2, Trash2 } from 'lucide-react';
+import { Search, Loader2, ArrowUpRight, ArrowDownRight, Edit2, Trash2, X } from 'lucide-react';
 import { formatQty } from '../../utils/index';
 
 export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete }: any) => {
@@ -84,20 +84,59 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-xl font-semibold text-white">{title}</h2>
         <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center gap-2">
-            <input 
-              type="date" 
-              value={startDate}
-              onChange={e => setStartDate(e.target.value)}
-              className="bg-bg-secondary border border-white/10 rounded-xl px-3 py-2 text-xs outline-none focus:border-brand-primary transition-colors text-white" 
-            />
-            <span className="text-slate-500 text-xs">至</span>
-            <input 
-              type="date" 
-              value={endDate}
-              onChange={e => setEndDate(e.target.value)}
-              className="bg-bg-secondary border border-white/10 rounded-xl px-3 py-2 text-xs outline-none focus:border-brand-primary transition-colors text-white" 
-            />
+          <div className="flex items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/5">
+            <div className="flex gap-1 mr-2 px-1">
+              {[
+                { label: '今日', getRange: () => { const d = new Date().toISOString().split('T')[0]; return [d, d]; } },
+                { label: '本月', getRange: () => { 
+                  const now = new Date(); 
+                  const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+                  return [start, end];
+                }},
+                { label: '本年', getRange: () => { 
+                  const year = new Date().getFullYear();
+                  return [`${year}-01-01`, `${year}-12-31`];
+                }}
+              ].map(range => (
+                <button
+                  key={range.label}
+                  onClick={() => {
+                    const [s, e] = range.getRange();
+                    setStartDate(s);
+                    setEndDate(e);
+                  }}
+                  className="px-2 py-1 text-[10px] text-slate-500 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
+            <div className="h-4 w-px bg-white/10 mx-1" />
+            <div className="flex items-center gap-1">
+              <input 
+                type="date" 
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                className="bg-transparent border-none px-2 py-1 text-xs outline-none text-slate-300 w-[120px] [color-scheme:dark]" 
+              />
+              <span className="text-slate-600 text-[10px]">至</span>
+              <input 
+                type="date" 
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+                className="bg-transparent border-none px-2 py-1 text-xs outline-none text-slate-300 w-[120px] [color-scheme:dark]" 
+              />
+            </div>
+            {(startDate || endDate) && (
+              <button 
+                onClick={() => { setStartDate(''); setEndDate(''); }}
+                className="ml-1 p-1.5 text-slate-500 hover:text-rose-400 transition-colors"
+                title="清除日期"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
