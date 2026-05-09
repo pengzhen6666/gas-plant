@@ -440,8 +440,8 @@ function App() {
         ))}
       </nav>
 
-      {/* Main Content Area - Added ml-72 for desktop to clear fixed sidebar */}
-      <main className="flex-1 p-4 md:p-10 md:ml-72 max-w-7xl mx-auto w-full">
+      {/* Main Content Area - Expanded to fill screen width */}
+      <main className="flex-1 p-4 md:p-10 md:ml-72 w-full max-w-[1800px]">
         <div className="animate-slide-up">
           {activeTab === 'dashboard' && (
             <>
