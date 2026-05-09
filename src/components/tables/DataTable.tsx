@@ -81,12 +81,25 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
 
   return (
     <div className="glass-card p-8 mb-6 overflow-hidden relative min-h-[300px]">
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-xl font-semibold text-white">{title}</h2>
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 bg-white/5 p-1.5 md:p-1 rounded-2xl border border-white/5 w-full md:w-auto">
-            {/* Quick Filters */}
-            <div className="flex gap-1 px-1 justify-center md:justify-start border-b md:border-b-0 md:border-r border-white/5 pb-1 md:pb-0 md:mr-2 md:pr-1">
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg md:text-xl font-black text-white tracking-tighter">{title}</h2>
+          {/* Mobile Search - Compact */}
+          <div className="relative flex-1 max-w-[200px] md:max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+            <input 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="搜索..." 
+              className="w-full bg-white/5 border border-white/5 rounded-xl pl-9 pr-4 py-1.5 text-xs outline-none focus:border-brand-primary/50 transition-all text-white placeholder:text-slate-600" 
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+          {/* Date Selector Group */}
+          <div className="flex flex-1 items-center gap-2 bg-white/[0.03] p-1 rounded-xl border border-white/5">
+            <div className="flex gap-0.5 border-r border-white/10 pr-1 shrink-0">
               {[
                 { label: '今日', getRange: () => { const d = new Date().toISOString().split('T')[0]; return [d, d]; } },
                 { label: '本月', getRange: () => { 
@@ -107,69 +120,58 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
                     setStartDate(s);
                     setEndDate(e);
                   }}
-                  className="px-2.5 py-1 text-[10px] text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                  className="px-2 py-1 text-[10px] font-bold text-slate-500 hover:text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-all"
                 >
                   {range.label}
                 </button>
               ))}
             </div>
             
-            {/* Inputs */}
-            <div className="flex items-center justify-between md:justify-start gap-1 px-1">
+            <div className="flex flex-1 items-center gap-1 min-w-0">
               <input 
                 type="date" 
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
-                className="bg-transparent border-none px-2 py-1 text-xs outline-none text-slate-300 w-full md:w-[120px] [color-scheme:dark]" 
+                className="bg-transparent border-none px-1 py-1 text-[10px] outline-none text-slate-300 w-full [color-scheme:dark]" 
               />
-              <span className="text-slate-600 text-[10px] shrink-0">至</span>
+              <span className="text-slate-700 text-[10px] shrink-0">→</span>
               <input 
                 type="date" 
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                className="bg-transparent border-none px-2 py-1 text-xs outline-none text-slate-300 w-full md:w-[120px] [color-scheme:dark]" 
+                className="bg-transparent border-none px-1 py-1 text-[10px] outline-none text-slate-300 w-full [color-scheme:dark]" 
               />
-              
               {(startDate || endDate) && (
                 <button 
                   onClick={() => { setStartDate(''); setEndDate(''); }}
-                  className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors"
-                  title="清除日期"
+                  className="p-1 text-rose-400/50 hover:text-rose-400 transition-colors shrink-0"
                 >
-                  <X size={14} />
+                  <X size={12} />
                 </button>
               )}
             </div>
           </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-            <input 
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              placeholder="搜索记录..." 
-              className="bg-bg-secondary border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm outline-none focus:border-brand-primary transition-colors text-white" 
-            />
-          </div>
         </div>
-      </div>
 
-      {categories && (
-        <div className="flex flex-wrap gap-2 mb-6">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-                selectedCategory === cat 
-                ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' 
-                : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      )}
+        {/* Categories - Horizontal Scroll on Mobile */}
+        {categories && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`whitespace-nowrap px-4 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase transition-all ${
+                  selectedCategory === cat 
+                  ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20 scale-105' 
+                  : 'bg-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-300'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Global Summary Cards */}
       <div className={`grid ${totalQty > 0 ? 'grid-cols-2' : 'grid-cols-1'} gap-4 mb-8 animate-in fade-in slide-in-from-top-2 duration-300`}>
