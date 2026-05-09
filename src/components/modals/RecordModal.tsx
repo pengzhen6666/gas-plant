@@ -3,7 +3,7 @@ import { X, Loader2 } from 'lucide-react';
 import type { RecordType, SettlementType } from '../../types/index';
 import { jinToKg } from '../../utils/index';
 
-export const RecordModal = ({ isOpen, onClose, onAddTransaction, onAddSale, onUpdateTransaction, onUpdateSale, isSubmitting, editData, prefillData }: any) => {
+export const RecordModal = ({ isOpen, onClose, onAddTransaction, onAddSale, onUpdateTransaction, onUpdateSale, isSubmitting, editData, prefillData, equipmentCatalog }: any) => {
   const [inputUnit, setInputUnit] = useState<'kg' | '斤'>('kg');
   const [formData, setFormData] = useState({
     type: '收入' as RecordType,
@@ -262,12 +262,46 @@ export const RecordModal = ({ isOpen, onClose, onAddTransaction, onAddSale, onUp
                   </select>
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <label className="text-sm text-brand-primary font-bold">配备设备 (商户正在使用的炉灶/油箱等)</label>
+                
+                {/* Quick Select Buttons */}
+                {equipmentCatalog && equipmentCatalog.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {equipmentCatalog.map((item: any) => {
+                      const isSelected = formData.assigned_equipment.includes(item.name);
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            const current = formData.assigned_equipment;
+                            const items = current ? current.split(/[,，]/).map(i => i.trim()).filter(Boolean) : [];
+                            let next;
+                            if (items.includes(item.name)) {
+                              next = items.filter(i => i !== item.name).join(', ');
+                            } else {
+                              next = [...items, item.name].join(', ');
+                            }
+                            setFormData({...formData, assigned_equipment: next});
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
+                            isSelected 
+                              ? 'bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20' 
+                              : 'bg-white/5 text-slate-400 border-white/10 hover:border-brand-primary/40'
+                          }`}
+                        >
+                          {item.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
                 <input 
                   type="text" 
                   className="w-full bg-brand-primary/5 border border-brand-primary/20 rounded-xl p-3 outline-none focus:border-brand-primary transition-colors text-white text-sm"
-                  placeholder="如：双眼灶*1, 50kg油箱*1..."
+                  placeholder="可点选上方标签，或手动输入..."
                   value={formData.assigned_equipment}
                   onChange={e => setFormData({...formData, assigned_equipment: e.target.value})}
                 />

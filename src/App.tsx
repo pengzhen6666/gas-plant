@@ -660,7 +660,18 @@ function App() {
         <span className="hidden md:inline text-lg ml-2">新增记录</span>
       </button>
 
-      <RecordModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditData(null); setPrefillData(null); }} onAddTransaction={addTransaction} onAddSale={addSale} onUpdateTransaction={updateTransaction} onUpdateSale={updateSale} isSubmitting={isSubmitting} editData={editData} prefillData={prefillData} />
+      <RecordModal 
+        isOpen={isModalOpen} 
+        onClose={() => { setIsModalOpen(false); setEditData(null); setPrefillData(null); }}
+        onAddTransaction={addTransaction}
+        onAddSale={addSale}
+        onUpdateTransaction={(id: string, data: any) => updateTransaction(id, data)}
+        onUpdateSale={updateSale}
+        isSubmitting={isSubmitting}
+        editData={editData}
+        prefillData={prefillData}
+        equipmentCatalog={equipmentCatalog}
+      />
       <PaymentModal isOpen={isPayModalOpen} onClose={() => { setIsPayModalOpen(false); setSelectedSale(null); }} sale={selectedSale} onProcessPayment={processPayment} isSubmitting={isSubmitting} />
       
       <LoginModal 
