@@ -445,28 +445,28 @@ function App() {
         <div className="animate-slide-up">
           {activeTab === 'dashboard' && (
             <>
-              <header className="mb-6 md:mb-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-bold uppercase tracking-widest mb-3">
-                  <Activity size={12} /> 实时数据看板
+              <header className="mb-4 md:mb-8">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-[9px] font-bold uppercase tracking-widest mb-2">
+                  <Activity size={10} /> 实时数据看板
                 </div>
-                <h1 className="text-2xl md:text-3xl font-black text-gradient tracking-tighter">财务概览</h1>
-                <p className="text-slate-400 text-xs md:text-sm mt-1 font-medium">实时监控经营数据与资金往来流向</p>
+                <h1 className="text-xl md:text-3xl font-black text-gradient tracking-tighter">财务概览</h1>
+                <p className="text-slate-400 text-[10px] md:text-sm mt-1 font-medium">实时监控经营数据与资金往来流向</p>
               </header>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 mb-8 md:mb-10">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-6 md:mb-10">
                 <StatCard title="累计收入" value={`¥${totalIncome.toLocaleString()}`} icon={TrendingUp} colorClass="emerald-400" />
                 <StatCard title="待收欠款" value={`¥${Math.max(0, totalDebt).toLocaleString()}`} icon={AlertCircle} colorClass="rose-400" />
                 <StatCard title="累计销量" value={`${totalOilSold.toLocaleString()}kg`} subValue={`${kgToJin(totalOilSold).toLocaleString()}斤`} icon={BarChart3} colorClass="brand-primary" />
                 <StatCard title="经营成本" value={`¥${totalExpense.toLocaleString()}`} icon={TrendingDown} colorClass="amber-400" />
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="glass-card p-6 md:p-8 relative overflow-hidden group">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
+                <div className="glass-card p-4 md:p-8 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity pointer-events-none">
-                    <AlertCircle size={120} />
+                    <AlertCircle size={100} />
                   </div>
-                  <h3 className="text-lg font-black mb-6 flex items-center gap-3">
-                    <div className="p-2 bg-rose-400/10 rounded-lg text-rose-400"><AlertCircle size={20} /></div>
+                  <h3 className="text-base md:text-lg font-black mb-4 flex items-center gap-3">
+                    <div className="p-2 bg-rose-400/10 rounded-lg text-rose-400"><AlertCircle size={18} /></div>
                     商户欠款红单 (前五)
                   </h3>
                   <div className="space-y-4">
@@ -678,12 +678,12 @@ function App() {
         </div>
       </main>
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button - Optimized for Mobile */}
       <button 
-        className="fixed bottom-24 md:bottom-10 right-6 md:right-10 btn-primary p-5 md:px-8 md:py-4 rounded-[2rem] shadow-2xl z-50 group border border-white/20"
+        className="fixed bottom-24 md:bottom-10 right-4 md:right-10 btn-primary p-4 md:px-8 md:py-4 rounded-2xl md:rounded-[2rem] shadow-2xl z-50 group border border-white/20 backdrop-blur-md"
         onClick={() => requireAuth(() => { setPrefillData(null); setEditData(null); setIsModalOpen(true); })}
       >
-        <PlusCircle size={28} className="group-hover:rotate-180 transition-transform duration-700 ease-in-out" /> 
+        <PlusCircle size={24} className="md:size-7 group-hover:rotate-180 transition-transform duration-700 ease-in-out" /> 
         <span className="hidden md:inline text-xl ml-3 tracking-tighter font-black italic">新增记录</span>
       </button>
 
