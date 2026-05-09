@@ -139,14 +139,15 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
               ¥ {totalAmount.toLocaleString()}
             </p>
          </div>
-         {totalQty > 0 && (
+         {/* Only show quantity if unit is consistent (Fuel or specific Equipment) */}
+         {(selectedCategory !== '全部' || filterType) && totalQty > 0 && (
            <div className="p-4 bg-brand-primary/5 rounded-2xl border border-brand-primary/10">
               <p className="text-[10px] text-brand-primary uppercase font-bold tracking-wider mb-1">
-                {selectedCategory === '全部' ? '筛选范围内总量' : `${selectedCategory}总量`}
+                {selectedCategory === '全部' ? '累计进货总量' : `${selectedCategory}总量`}
               </p>
               <p className="text-2xl font-black text-brand-primary">
                 {totalQty.toLocaleString()} <span className="text-xs font-normal">
-                  {selectedCategory === '燃油' || filterType === '燃油采购' ? 'kg' : '个/kg'}
+                  {(selectedCategory === '燃油' || filterType === '燃油采购') ? 'kg' : '个'}
                 </span>
               </p>
            </div>
