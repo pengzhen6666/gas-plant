@@ -445,15 +445,15 @@ function App() {
         <div className="animate-slide-up">
           {activeTab === 'dashboard' && (
             <>
-              <header className="mb-10 md:mb-14">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
+              <header className="mb-6 md:mb-8">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-bold uppercase tracking-widest mb-3">
                   <Activity size={12} /> 实时数据看板
                 </div>
-                <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">财务概览</h1>
-                <p className="text-slate-400 text-sm md:text-base mt-2 font-medium">实时监控经营数据与资金往来流向</p>
+                <h1 className="text-2xl md:text-3xl font-black text-gradient tracking-tighter">财务概览</h1>
+                <p className="text-slate-400 text-xs md:text-sm mt-1 font-medium">实时监控经营数据与资金往来流向</p>
               </header>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 mb-10 md:mb-14">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 mb-8 md:mb-10">
                 <StatCard title="累计收入" value={`¥${totalIncome.toLocaleString()}`} icon={TrendingUp} colorClass="emerald-400" />
                 <StatCard title="待收欠款" value={`¥${Math.max(0, totalDebt).toLocaleString()}`} icon={AlertCircle} colorClass="rose-400" />
                 <StatCard title="累计销量" value={`${totalOilSold.toLocaleString()}kg`} subValue={`${kgToJin(totalOilSold).toLocaleString()}斤`} icon={BarChart3} colorClass="brand-primary" />
@@ -566,20 +566,20 @@ function App() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-                <div className="glass-card p-8 flex flex-col justify-center items-center text-center">
-                  <div className={`p-6 rounded-3xl mb-4 ${netProfit >= 0 ? 'bg-emerald-400/10 text-emerald-400' : 'bg-rose-400/10 text-rose-400'}`}>
-                    <Activity size={40} />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div className="glass-card p-6 flex flex-col justify-center items-center text-center">
+                  <div className={`p-4 rounded-2xl mb-3 ${netProfit >= 0 ? 'bg-emerald-400/10 text-emerald-400' : 'bg-rose-400/10 text-rose-400'}`}>
+                    <Activity size={32} />
                   </div>
-                  <h4 className="text-slate-500 text-xs font-black uppercase tracking-[0.2em] mb-2">经营状态评估</h4>
-                  <p className={`text-3xl font-black ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <h4 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">经营状态评估</h4>
+                  <p className={`text-xl font-black ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {netProfit >= 0 ? '盈利状态良好' : '当前处于亏损'}
                   </p>
                 </div>
-                <div className="lg:col-span-2 glass-card p-8">
-                   <div className="flex items-center gap-3 mb-8">
-                     <div className="p-2 bg-brand-primary/10 rounded-lg text-brand-primary"><PieChart size={20} /></div>
-                     <span className="text-lg font-black">资金流动性分析</span>
+                <div className="lg:col-span-2 glass-card p-6">
+                   <div className="flex items-center gap-3 mb-6">
+                     <div className="p-2 bg-brand-primary/10 rounded-lg text-brand-primary"><PieChart size={18} /></div>
+                     <span className="text-base font-black">资金流动性分析</span>
                    </div>
                    <div className="space-y-8">
                       <div className="space-y-3">
