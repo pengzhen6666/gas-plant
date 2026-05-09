@@ -25,8 +25,11 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
         if (selectedCategory === '燃油') {
           return item.type === '燃油采购';
         }
-        if (selectedCategory === '日常收支') {
-          return item.type === '收入' || item.type === '支出';
+        if (selectedCategory === '日常收入') {
+          return item.type === '收入';
+        }
+        if (selectedCategory === '日常支出') {
+          return item.type === '支出';
         }
         // Match specific equipment categories
         const matchCategory = item.category === selectedCategory;
@@ -64,7 +67,7 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
       return null;
     }
     // Accounting / History views
-    return ['全部', '燃油', '油箱', '炉灶', '煲仔炉', '汤炉', '蒸柜', '运费', '其他配件', '日常收支'];
+    return ['全部', '燃油', '油箱', '炉灶', '煲仔炉', '汤炉', '蒸柜', '运费', '其他配件', '日常收入', '日常支出'];
   }, [filterType]);
 
   return (
@@ -117,20 +120,27 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
         </div>
       )}
 
-      {(filterType === '燃油采购' || filterType === '设备采购') && (
-        <div className="grid grid-cols-2 gap-4 mb-8">
-           <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">累计进货总额</p>
-              <p className="text-2xl font-black text-white">¥ {totalAmount.toLocaleString()}</p>
-           </div>
+      {/* Global Summary Cards */}
+      <div className={`grid ${totalQty > 0 ? 'grid-cols-2' : 'grid-cols-1'} gap-4 mb-8 animate-in fade-in slide-in-from-top-2 duration-300`}>
+         <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">
+              {selectedCategory === '全部' ? '筛选范围内总额' : `${selectedCategory}总额`}
+            </p>
+            <p className="text-2xl font-black text-white">¥ {totalAmount.toLocaleString()}</p>
+         </div>
+         {totalQty > 0 && (
            <div className="p-4 bg-brand-primary/5 rounded-2xl border border-brand-primary/10">
-              <p className="text-[10px] text-brand-primary uppercase font-bold tracking-wider mb-1">累计进货总量</p>
+              <p className="text-[10px] text-brand-primary uppercase font-bold tracking-wider mb-1">
+                {selectedCategory === '全部' ? '筛选范围内总量' : `${selectedCategory}总量`}
+              </p>
               <p className="text-2xl font-black text-brand-primary">
-                {totalQty.toLocaleString()} <span className="text-xs font-normal">{filterType === '燃油采购' ? 'kg' : '个'}</span>
+                {totalQty.toLocaleString()} <span className="text-xs font-normal">
+                  {selectedCategory === '燃油' || filterType === '燃油采购' ? 'kg' : '个/kg'}
+                </span>
               </p>
            </div>
-        </div>
-      )}
+         )}
+      </div>
 
       {isLoading && <div className="absolute inset-0 flex items-center justify-center bg-bg-primary/50 z-10"><Loader2 className="animate-spin text-brand-primary" /></div>}
       
