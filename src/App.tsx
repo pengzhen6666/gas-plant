@@ -384,7 +384,7 @@ function App() {
   return (
     <div className="flex min-h-screen bg-bg-primary text-slate-100 pb-20 md:pb-0 overflow-x-hidden">
       {/* Sidebar - Desktop Only */}
-      <aside className="hidden md:flex w-72 p-6 flex-col gap-8 sticky top-0 h-screen z-50">
+      <aside className="hidden md:flex w-72 p-6 flex-col gap-8 fixed left-0 top-0 h-screen z-50">
         <div className="glass-card flex-1 flex flex-col p-6 border-white/[0.05]">
           <div className="flex items-center gap-3 px-2 mb-10">
             <div className="w-10 h-10 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-2xl flex items-center justify-center shadow-lg shadow-brand-primary/30">
@@ -440,13 +440,14 @@ function App() {
         ))}
       </nav>
 
-      <main className="flex-1 p-4 md:p-10 max-w-7xl mx-auto w-full">
+      {/* Main Content Area - Added ml-72 for desktop to clear fixed sidebar */}
+      <main className="flex-1 p-4 md:p-10 md:ml-72 max-w-7xl mx-auto w-full">
         <div className="animate-slide-up">
           {activeTab === 'dashboard' && (
             <>
               <header className="mb-10 md:mb-14">
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
-                  <Activity size={12} /> Live Dashboard
+                  <Activity size={12} /> 实时数据看板
                 </div>
                 <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">财务概览</h1>
                 <p className="text-slate-400 text-sm md:text-base mt-2 font-medium">实时监控经营数据与资金往来流向</p>
@@ -466,7 +467,7 @@ function App() {
                   </div>
                   <h3 className="text-lg font-black mb-6 flex items-center gap-3">
                     <div className="p-2 bg-rose-400/10 rounded-lg text-rose-400"><AlertCircle size={20} /></div>
-                    商户欠款红单 (Top 5)
+                    商户欠款红单 (前五)
                   </h3>
                   <div className="space-y-4">
                     {urgentDebtList.map((item, idx) => {
@@ -475,7 +476,7 @@ function App() {
                         <div key={idx} className="flex justify-between items-center p-4 bg-white/[0.02] rounded-2xl border border-white/[0.05] hover:bg-white/[0.05] hover:border-brand-primary/20 transition-all group/item">
                           <div className="min-w-0 flex-1">
                             <p className="font-bold text-white group-hover/item:text-brand-primary transition-colors">{item.customer_name}</p>
-                            <p className="text-[10px] text-slate-500 font-bold mt-1 tracking-widest">{item.phone || 'NO PHONE'}</p>
+                            <p className="text-[10px] text-slate-500 font-bold mt-1 tracking-widest">{item.phone || '无联系电话'}</p>
                           </div>
                           <div className="flex flex-col items-end ml-4">
                             <div className="text-rose-400 font-black text-lg">¥{item.total_debt.toLocaleString()}</div>
@@ -584,7 +585,7 @@ function App() {
                       <div className="space-y-3">
                         <div className="flex justify-between text-xs font-bold">
                           <span className="text-slate-400 uppercase tracking-widest">收支平衡分布</span>
-                          <span className="text-white">{(totalIncome / (totalIncome + totalExpense || 1) * 100).toFixed(1)}% IN / {(totalExpense / (totalIncome + totalExpense || 1) * 100).toFixed(1)}% OUT</span>
+                          <span className="text-white">{(totalIncome / (totalIncome + totalExpense || 1) * 100).toFixed(1)}% 流入 / {(totalExpense / (totalIncome + totalExpense || 1) * 100).toFixed(1)}% 流出</span>
                         </div>
                         <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden flex p-1">
                           <div className="h-full bg-emerald-400 rounded-full shadow-[0_0_15px_rgba(52,211,153,0.3)] transition-all duration-1000" style={{width: `${(totalIncome / (totalIncome + totalExpense || 1) * 100)}%`}} />
@@ -683,7 +684,7 @@ function App() {
         onClick={() => requireAuth(() => { setPrefillData(null); setEditData(null); setIsModalOpen(true); })}
       >
         <PlusCircle size={28} className="group-hover:rotate-180 transition-transform duration-700 ease-in-out" /> 
-        <span className="hidden md:inline text-xl ml-3 tracking-tighter font-black italic">NEW RECORD</span>
+        <span className="hidden md:inline text-xl ml-3 tracking-tighter font-black italic">新增记录</span>
       </button>
 
       <RecordModal 
