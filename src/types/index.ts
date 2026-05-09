@@ -38,4 +38,5 @@ export interface MerchantSummary {
   settled_count: number;
   settlement_type?: SettlementType;
   assigned_equipment?: string;
+  total_asset_value?: number;
 }

@@ -4,7 +4,7 @@ import { MerchantExpandableRow } from './MerchantExpandableRow';
 import { kgToJin } from '../../utils/index';
 import type { Sale, Transaction, MerchantSummary, SettlementType } from '../../types/index';
 
-export const SalesTable = ({ data, transactions, isLoading, onEdit, onDelete, onQuickPay, onNewOrder }: { data: Sale[], transactions: Transaction[], isLoading: boolean, onEdit: (s: Sale) => void, onDelete: (id: string) => void, onQuickPay: (s: Sale) => void, onNewOrder: (name: string, phone: string, settlement_type?: SettlementType) => void }) => {
+export const SalesTable = ({ data, transactions, equipmentCatalog, isLoading, onEdit, onDelete, onQuickPay, onNewOrder }: { data: Sale[], transactions: Transaction[], equipmentCatalog: any[], isLoading: boolean, onEdit: (s: Sale) => void, onDelete: (id: string) => void, onQuickPay: (s: Sale) => void, onNewOrder: (name: string, phone: string, settlement_type?: SettlementType) => void }) => {
   const [view, setView] = useState<'list' | 'stats'>('stats'); 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('全部');
@@ -57,9 +57,23 @@ export const SalesTable = ({ data, transactions, isLoading, onEdit, onDelete, on
           statsMap[key].assigned_equipment = current ? `${current}, ${newEquip}` : newEquip;
         }
       }
+      
+      // Calculate Asset Value
+      let assetValue = 0;
+      const equipStr = statsMap[key].assigned_equipment || '';
+      equipmentCatalog.forEach(item => {
+        if (equipStr.includes(item.name)) {
+          // Simple quantity extraction: e.g. "2个炉灶" or "50油箱x2"
+          const regex = new RegExp(`(\\d+)[个|套|只|x|*]?${item.name}`, 'i');
+          const match = equipStr.match(regex) || equipStr.match(new RegExp(`${item.name}[^\\d]*(\\d+)`, 'i'));
+          const qty = match ? parseInt(match[1]) : 1;
+          assetValue += item.price * qty;
+        }
+      });
+      statsMap[key].total_asset_value = assetValue;
     });
     return Object.values(statsMap).sort((a, b) => b.total_debt - a.total_debt);
-  }, [filteredData]);
+  }, [filteredData, equipmentCatalog]);
 
   return (
     <div className="space-y-6">
@@ -290,6 +304,15 @@ export const SalesTable = ({ data, transactions, isLoading, onEdit, onDelete, on
                             <p className="text-[8px] text-slate-500 font-bold uppercase mb-1">总欠款</p>
                             <p className={`text-xs font-black ${stat.total_debt > 0.01 ? 'text-rose-400' : 'text-emerald-400'}`}>¥{Math.round(stat.total_debt)}</p>
                          </div>
+                      </div>
+
+                      {/* Equipment Asset Value for Mobile */}
+                      <div className="flex items-center justify-between px-3 py-2 bg-white/5 rounded-2xl border border-white/5">
+                        <div className="flex items-center gap-2">
+                           <Package size={14} className="text-brand-primary" />
+                           <span className="text-[10px] text-slate-400 font-bold">店内存放设备价值</span>
+                        </div>
+                        <span className="text-xs font-black text-white">¥{stat.total_asset_value?.toLocaleString() || 0}</span>
                       </div>
 
                       {/* Pay Progress Bar */}

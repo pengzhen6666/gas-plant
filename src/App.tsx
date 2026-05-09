@@ -19,7 +19,8 @@ import {
   Unlock,
   Lock,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Package
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { LoginModal } from './components/modals/LoginModal';
@@ -37,6 +38,13 @@ import { PaymentModal } from './components/modals/PaymentModal';
 import { DataTable } from './components/tables/DataTable';
 import { SalesTable } from './components/tables/SalesTable';
 import { ExpandableMerchantRow } from './components/tables/ExpandableMerchantRow';
+import { EquipmentCatalog } from './components/tables/EquipmentCatalog';
+
+interface EquipmentType {
+  id: string;
+  name: string;
+  price: number;
+}
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -48,6 +56,7 @@ function App() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [equipmentCatalog, setEquipmentCatalog] = useState<EquipmentType[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -57,7 +66,45 @@ function App() {
     const auth = localStorage.getItem('gus_plant_auth');
     if (auth === 'true') setIsLoggedIn(true);
     fetchAllData();
+    fetchCatalog();
   }, []);
+
+  const fetchCatalog = async () => {
+    try {
+      const { data, error } = await supabase.from('equipment_catalog').select('*').order('name');
+      if (error) {
+        console.warn('Equipment catalog table not found or error:', error.message);
+        // Fallback to demo data or empty
+        return;
+      }
+      if (data) setEquipmentCatalog(data);
+    } catch (e) { console.error(e); }
+  };
+
+  const addCatalogItem = async (name: string, price: number) => {
+    try {
+      const { data, error } = await supabase.from('equipment_catalog').insert([{ name, price }]).select();
+      if (error) throw error;
+      if (data) setEquipmentCatalog([...equipmentCatalog, data[0]].sort((a, b) => a.name.localeCompare(b.name)));
+    } catch (e) { alert('添加失败，请检查数据库'); }
+  };
+
+  const updateCatalogItem = async (id: string, name: string, price: number) => {
+    try {
+      const { data, error } = await supabase.from('equipment_catalog').update({ name, price }).eq('id', id).select();
+      if (error) throw error;
+      if (data) setEquipmentCatalog(equipmentCatalog.map(item => item.id === id ? data[0] : item));
+    } catch (e) { alert('更新失败'); }
+  };
+
+  const deleteCatalogItem = async (id: string) => {
+    if (!confirm('确定删除此设备预设吗？')) return;
+    try {
+      const { error } = await supabase.from('equipment_catalog').delete().eq('id', id);
+      if (error) throw error;
+      setEquipmentCatalog(equipmentCatalog.filter(item => item.id !== id));
+    } catch (e) { alert('删除失败'); }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('gus_plant_auth');
@@ -263,6 +310,7 @@ function App() {
   const menuItems = [
     { id: 'dashboard', label: '仪表盘', icon: LayoutDashboard },
     { id: 'merchants', label: '商户中心', icon: Users },
+    { id: 'equipment_prices', label: '设备资产库', icon: Package },
     { id: 'accounting', label: '收支明细', icon: ReceiptIndianRupee },
     { id: 'fuel', label: '燃油进货', icon: Fuel },
     { id: 'stoves', label: '设备采购', icon: FlameKindling },
@@ -462,6 +510,7 @@ function App() {
               <SalesTable 
                 data={sales} 
                 transactions={transactions} 
+                equipmentCatalog={equipmentCatalog}
                 isLoading={isLoading} 
                 onEdit={(data) => requireAuth(() => openEditModal(data))} 
                 onDelete={(id) => requireAuth(() => deleteSale(id))} 
@@ -552,6 +601,15 @@ function App() {
               />
             </>
           )}
+
+            {activeTab === 'equipment_prices' && (
+              <EquipmentCatalog 
+                catalog={equipmentCatalog}
+                onAdd={addCatalogItem}
+                onUpdate={updateCatalogItem}
+                onDelete={deleteCatalogItem}
+              />
+            )}
 
             {activeTab === 'history' && (
               <DataTable 

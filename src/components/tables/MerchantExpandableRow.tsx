@@ -156,9 +156,10 @@ export const MerchantExpandableRow = ({ stat, sales, transactions, onNewOrder }:
                   <h3 className="text-white font-bold flex items-center gap-2 text-sm md:text-base">
                     <HistoryIcon className="text-brand-primary" size={18} /> 对账流水
                   </h3>
-                  <div className="flex gap-4 text-[10px] md:text-xs">
+                  <div className="flex flex-wrap gap-3 md:gap-6 text-[10px] md:text-xs">
                      <div className="text-slate-400">商户: <span className="text-white font-bold">{stat.customer_name}</span></div>
-                     <div className="text-slate-400">总欠款: <span className="text-rose-400 font-bold">¥{Math.max(0, stat.total_debt).toLocaleString()}</span></div>
+                     <div className="text-slate-400">资产价值: <span className="text-brand-primary font-bold">¥{stat.total_asset_value?.toLocaleString() || 0}</span></div>
+                     <div className="text-slate-400">当前总欠款: <span className="text-rose-400 font-bold">¥{Math.max(0, stat.total_debt).toLocaleString()}</span></div>
                   </div>
                </div>
                <div className="overflow-x-auto rounded-xl border border-white/10 bg-bg-secondary shadow-2xl">
