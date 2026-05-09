@@ -8,7 +8,6 @@ import {
   TrendingUp,
   PlusCircle,
   TrendingDown,
-  Wallet,
   Users,
   AlertCircle,
   BarChart3,
@@ -383,110 +382,135 @@ function App() {
   }, [merchantSummaries]);
 
   return (
-    <div className="flex min-h-screen bg-bg-primary text-slate-100 font-sans pb-20 md:pb-0">
+    <div className="flex min-h-screen bg-bg-primary text-slate-100 pb-20 md:pb-0 overflow-x-hidden">
       {/* Sidebar - Desktop Only */}
-      <aside className="hidden md:flex w-72 bg-bg-secondary border-r border-white/5 p-8 flex-col gap-8 sticky top-0 h-screen overflow-y-auto">
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-xl flex items-center justify-center shadow-lg shadow-brand-primary/20">
-            <FlameKindling color="white" />
+      <aside className="hidden md:flex w-72 p-6 flex-col gap-8 sticky top-0 h-screen z-50">
+        <div className="glass-card flex-1 flex flex-col p-6 border-white/[0.05]">
+          <div className="flex items-center gap-3 px-2 mb-10">
+            <div className="w-10 h-10 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-2xl flex items-center justify-center shadow-lg shadow-brand-primary/30">
+              <FlameKindling color="white" size={24} />
+            </div>
+            <span className="text-xl font-black tracking-tighter text-gradient">GUS PLANT</span>
           </div>
-          <span className="text-xl font-extrabold tracking-tight">GUS PLANT</span>
-        </div>
-        <nav className="flex flex-col gap-2 mt-4">
-          {menuItems.map((item) => (
-            <div key={item.id} className={`nav-item ${activeTab === item.id ? 'nav-item-active' : ''}`} onClick={() => setActiveTab(item.id)}>
-              <item.icon size={20} /> <span className="font-medium">{item.label}</span>
-            </div>
-          ))}
-        </nav>
-        <div className="mt-auto pt-6 border-t border-white/5 space-y-4">
-          {isLoggedIn ? (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 px-4 py-2 bg-emerald-400/10 text-emerald-400 rounded-xl border border-emerald-400/20 text-xs">
-                <Unlock size={14} /> 管理员: Pz
+
+          <nav className="flex flex-col gap-1.5 flex-1">
+            {menuItems.map((item) => (
+              <div 
+                key={item.id} 
+                className={`nav-item ${activeTab === item.id ? 'nav-item-active' : ''}`} 
+                onClick={() => setActiveTab(item.id)}
+              >
+                <item.icon size={20} className={activeTab === item.id ? 'text-brand-primary' : ''} /> 
+                <span className="font-bold text-sm tracking-wide">{item.label}</span>
               </div>
-              <button onClick={handleLogout} className="nav-item text-rose-400 hover:bg-rose-400/10 border-none">
-                <LogOut size={20} /> <span>退出管理</span>
+            ))}
+          </nav>
+
+          <div className="pt-6 border-t border-white/5 space-y-3 mt-4">
+            {isLoggedIn ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3 px-4 py-3 bg-emerald-400/5 text-emerald-400 rounded-2xl border border-emerald-400/10 text-[10px] font-bold uppercase tracking-widest">
+                  <Unlock size={14} /> 管理员: Pz
+                </div>
+                <button onClick={handleLogout} className="nav-item text-rose-400/70 hover:text-rose-400 hover:bg-rose-400/5">
+                  <LogOut size={20} /> <span className="font-bold text-sm">退出管理</span>
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setIsLoginModalOpen(true)} className="nav-item text-brand-primary hover:bg-brand-primary/5">
+                <Lock size={20} /> <span className="font-bold text-sm">管理员登录</span>
               </button>
-            </div>
-          ) : (
-            <button onClick={() => setIsLoginModalOpen(true)} className="nav-item text-brand-primary hover:bg-brand-primary/10 border-none">
-              <Lock size={20} /> <span>管理员登录</span>
-            </button>
-          )}
-          <div className="nav-item"><Settings size={20} /> <span>系统设置</span></div>
+            )}
+            <div className="nav-item hover:bg-white/5"><Settings size={20} /> <span className="font-bold text-sm">系统设置</span></div>
+          </div>
         </div>
       </aside>
 
       {/* Bottom Navigation - Mobile Only */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-secondary/95 backdrop-blur-lg border-t border-white/5 flex justify-around items-center py-3 px-2 z-[100] safe-area-inset-bottom">
+      <nav className="md:hidden fixed bottom-4 left-4 right-4 h-16 bg-bg-secondary/80 backdrop-blur-3xl border border-white/10 rounded-3xl flex justify-around items-center px-4 z-[100] shadow-2xl">
         {menuItems.map((item) => (
           <button 
             key={item.id} 
             onClick={() => setActiveTab(item.id)}
-            className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-brand-primary' : 'text-slate-500'}`}
+            className={`flex flex-col items-center justify-center gap-1 transition-all duration-500 flex-1 h-full rounded-2xl ${activeTab === item.id ? 'bg-white/5 text-brand-primary' : 'text-slate-500'}`}
           >
-            <item.icon size={20} className={activeTab === item.id ? 'scale-110' : ''} />
-            <span className="text-[10px] font-bold">{item.label}</span>
+            <item.icon size={18} className={`transition-transform duration-500 ${activeTab === item.id ? 'scale-125' : ''}`} />
+            <span className={`text-[9px] font-black tracking-tighter uppercase transition-all duration-500 ${activeTab === item.id ? 'opacity-100 translate-y-0' : 'opacity-60'}`}>{item.label}</span>
           </button>
         ))}
       </nav>
 
-      <main className="flex-1 p-4 md:p-12 max-w-7xl mx-auto w-full">
-        <div className="animate-in fade-in duration-700">
+      <main className="flex-1 p-4 md:p-10 max-w-7xl mx-auto w-full">
+        <div className="animate-slide-up">
           {activeTab === 'dashboard' && (
             <>
-              <header className="mb-6 md:mb-10">
-                <h1 className="text-2xl md:text-3xl font-bold">财务中心</h1>
-                <p className="text-slate-400 text-sm mt-1">实时经营数据与资金流监控</p>
+              <header className="mb-10 md:mb-14">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
+                  <Activity size={12} /> Live Dashboard
+                </div>
+                <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">财务概览</h1>
+                <p className="text-slate-400 text-sm md:text-base mt-2 font-medium">实时监控经营数据与资金往来流向</p>
               </header>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-10">
-                <StatCard title="累计总收入" value={`¥ ${totalIncome.toLocaleString()}`} icon={TrendingUp} colorClass="emerald-400" />
-                <StatCard title="累计总欠款" value={`¥ ${Math.max(0, totalDebt).toLocaleString()}`} icon={AlertCircle} colorClass="rose-400" />
-                <StatCard title="累计总用油" value={`${totalOilSold.toLocaleString()}kg`} subValue={`${kgToJin(totalOilSold).toLocaleString()}斤`} icon={BarChart3} colorClass="brand-primary" />
-                <StatCard title="累计总支出" value={`¥ ${totalExpense.toLocaleString()}`} icon={TrendingDown} colorClass="amber-400" />
+
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 mb-10 md:mb-14">
+                <StatCard title="累计收入" value={`¥${totalIncome.toLocaleString()}`} icon={TrendingUp} colorClass="emerald-400" />
+                <StatCard title="待收欠款" value={`¥${Math.max(0, totalDebt).toLocaleString()}`} icon={AlertCircle} colorClass="rose-400" />
+                <StatCard title="累计销量" value={`${totalOilSold.toLocaleString()}kg`} subValue={`${kgToJin(totalOilSold).toLocaleString()}斤`} icon={BarChart3} colorClass="brand-primary" />
+                <StatCard title="经营成本" value={`¥${totalExpense.toLocaleString()}`} icon={TrendingDown} colorClass="amber-400" />
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="glass-card p-4 md:p-6">
-                  <h3 className="text-base md:text-lg font-semibold mb-4 flex items-center gap-2">
-                    <AlertCircle className="text-rose-400" size={18} /> 商户欠款聚合名单
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="glass-card p-6 md:p-8 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity pointer-events-none">
+                    <AlertCircle size={120} />
+                  </div>
+                  <h3 className="text-lg font-black mb-6 flex items-center gap-3">
+                    <div className="p-2 bg-rose-400/10 rounded-lg text-rose-400"><AlertCircle size={20} /></div>
+                    商户欠款红单 (Top 5)
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {urgentDebtList.map((item, idx) => {
                       const oldestUnpaid = sales.find(s => s.customer_name === item.customer_name && s.status !== '已付款');
                       return (
-                        <div key={idx} className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5 hover:border-brand-primary/30 transition-colors group">
+                        <div key={idx} className="flex justify-between items-center p-4 bg-white/[0.02] rounded-2xl border border-white/[0.05] hover:bg-white/[0.05] hover:border-brand-primary/20 transition-all group/item">
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium truncate text-sm md:text-base">{item.customer_name}</p>
-                            <p className="text-[10px] text-slate-500 font-mono mt-0.5">{item.phone || '无电话'}</p>
+                            <p className="font-bold text-white group-hover/item:text-brand-primary transition-colors">{item.customer_name}</p>
+                            <p className="text-[10px] text-slate-500 font-bold mt-1 tracking-widest">{item.phone || 'NO PHONE'}</p>
                           </div>
-                          <div className="flex flex-col items-end ml-3 shrink-0">
-                            <div className="flex items-center gap-1 text-rose-400 font-bold">
-                              <span className="text-[10px] opacity-70">欠</span>
-                              <span className="text-base md:text-lg">¥ {item.total_debt.toLocaleString()}</span>
-                            </div>
+                          <div className="flex flex-col items-end ml-4">
+                            <div className="text-rose-400 font-black text-lg">¥{item.total_debt.toLocaleString()}</div>
                             {oldestUnpaid && (
                               <button 
                                 onClick={() => requireAuth(() => openPayModal(oldestUnpaid))}
-                                className="flex items-center gap-1 mt-1 px-2 py-1 bg-brand-primary/20 text-brand-primary text-[10px] font-bold rounded-md hover:bg-brand-primary hover:text-white transition-all md:opacity-0 md:group-hover:opacity-100"
+                                className="mt-2 px-3 py-1 bg-brand-primary/10 text-brand-primary text-[10px] font-black rounded-lg hover:bg-brand-primary hover:text-white transition-all opacity-0 group-hover/item:opacity-100"
                               >
-                                <Wallet size={10} /> 录入还款
+                                录入回款
                               </button>
                             )}
                           </div>
                         </div>
                       );
                     })}
-                    {urgentDebtList.length === 0 && <p className="text-center text-slate-500 py-4 text-sm">所有商户账目已结清！</p>}
+                    {urgentDebtList.length === 0 && (
+                      <div className="text-center py-10">
+                        <div className="w-16 h-16 bg-emerald-400/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                           <Activity size={32} />
+                        </div>
+                        <p className="text-slate-500 font-bold">目前暂无待收欠款</p>
+                      </div>
+                    )}
                   </div>
-                  <button onClick={() => setActiveTab('merchants')} className="w-full mt-4 py-2 text-xs text-brand-primary hover:text-white transition-colors border border-brand-primary/20 rounded-lg">查看详细商户报表</button>
                 </div>
                 
-                <div className="glass-card p-4 md:p-6">
-                  <h3 className="text-base md:text-lg font-semibold mb-4 flex items-center gap-2">
-                    <Users className="text-brand-primary" size={18} /> 商户往来快览 (点击展开)
+                <div className="glass-card p-6 md:p-8 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity pointer-events-none">
+                    <Users size={120} />
+                  </div>
+                  <h3 className="text-lg font-black mb-6 flex items-center gap-3">
+                    <div className="p-2 bg-brand-primary/10 rounded-lg text-brand-primary"><Users size={20} /></div>
+                    活跃商户快览
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {merchantSummaries.slice(0, 6).map((item, idx) => (
                       <ExpandableMerchantRow 
                         key={idx} 
@@ -494,7 +518,6 @@ function App() {
                         transactions={transactions}
                       />
                     ))}
-                    {merchantSummaries.length === 0 && <p className="text-center text-slate-500 py-4 text-sm">暂无商户记录</p>}
                   </div>
                 </div>
               </div>
@@ -503,9 +526,9 @@ function App() {
 
           {activeTab === 'merchants' && (
             <>
-              <header className="mb-6 md:mb-10">
-                <h1 className="text-2xl md:text-3xl font-bold">商户中心</h1>
-                <p className="text-slate-400 text-sm mt-1">管理商家订货记录与进货表</p>
+              <header className="mb-10">
+                <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">商户中心</h1>
+                <p className="text-slate-400 text-sm mt-2 font-medium">管理商家订货记录、设备资产与进货档案</p>
               </header>
               <SalesTable 
                 data={sales} 
@@ -522,70 +545,60 @@ function App() {
 
           {activeTab === 'accounting' && (
             <>
-              <header className="mb-6 md:mb-10">
-                <h1 className="text-2xl md:text-3xl font-bold">收支明细</h1>
-                <p className="text-slate-400 text-sm mt-1">实时计算业务整体盈亏状况</p>
+              <header className="mb-10">
+                <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">收支明细</h1>
+                <p className="text-slate-400 text-sm mt-2 font-medium">业务全景盈亏实时计算与资金流监控</p>
               </header>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-10">
-                <StatCard 
-                  title="累计实收" 
-                  value={`¥ ${totalIncome.toLocaleString()}`} 
-                  icon={ArrowUp} 
-                  colorClass="emerald-400" 
-                />
-                <StatCard 
-                  title="累计实出" 
-                  value={`¥ ${totalExpense.toLocaleString()}`} 
-                  icon={ArrowDown} 
-                  colorClass="rose-400" 
-                />
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 mb-10">
+                <StatCard title="累计实收" value={`¥${totalIncome.toLocaleString()}`} icon={ArrowUp} colorClass="emerald-400" />
+                <StatCard title="累计支出" value={`¥${totalExpense.toLocaleString()}`} icon={ArrowDown} colorClass="rose-400" />
                 <div className="col-span-2 md:col-span-1">
                   <StatCard 
-                    title="盈亏净额" 
-                    value={`¥ ${netProfit.toLocaleString()}`} 
+                    title="净利润" 
+                    value={`¥${netProfit.toLocaleString()}`} 
                     isHighlight={true}
                     icon={netProfit >= 0 ? TrendingUp : TrendingDown} 
                     colorClass={netProfit >= 0 ? "emerald-400" : "rose-400"} 
-                    subValue={netProfit >= 0 ? `盈利：+${profitRate.toFixed(1)}%` : `亏损：${profitRate.toFixed(1)}%`}
+                    subValue={netProfit >= 0 ? `利润率: +${profitRate.toFixed(1)}%` : `亏损率: ${profitRate.toFixed(1)}%`}
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-10">
-                <div className="lg:col-span-1 glass-card p-6 flex flex-col justify-center items-center text-center">
-                  <div className={`p-4 rounded-full mb-4 ${netProfit >= 0 ? 'bg-emerald-400/10 text-emerald-400' : 'bg-rose-400/10 text-rose-400'}`}>
-                    <Activity size={32} />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+                <div className="glass-card p-8 flex flex-col justify-center items-center text-center">
+                  <div className={`p-6 rounded-3xl mb-4 ${netProfit >= 0 ? 'bg-emerald-400/10 text-emerald-400' : 'bg-rose-400/10 text-rose-400'}`}>
+                    <Activity size={40} />
                   </div>
-                  <h4 className="text-slate-400 text-sm font-bold uppercase tracking-wider mb-2">经营状态</h4>
-                  <p className={`text-2xl font-black ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {netProfit >= 0 ? '盈利中' : '亏损中'}
+                  <h4 className="text-slate-500 text-xs font-black uppercase tracking-[0.2em] mb-2">经营状态评估</h4>
+                  <p className={`text-3xl font-black ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {netProfit >= 0 ? '盈利状态良好' : '当前处于亏损'}
                   </p>
-                  <p className="text-[10px] text-slate-500 mt-2 italic">基于实到现金流计算</p>
                 </div>
-                <div className="lg:col-span-3 glass-card p-4 md:p-6">
-                   <div className="flex items-center gap-2 mb-6 text-white font-bold">
-                     <PieChart size={18} className="text-brand-primary" /> 资金概览分析
+                <div className="lg:col-span-2 glass-card p-8">
+                   <div className="flex items-center gap-3 mb-8">
+                     <div className="p-2 bg-brand-primary/10 rounded-lg text-brand-primary"><PieChart size={20} /></div>
+                     <span className="text-lg font-black">资金流动性分析</span>
                    </div>
-                   <div className="space-y-6">
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-[10px] md:text-xs mb-1">
-                          <span className="text-slate-400">收入 vs 支出 (平衡度)</span>
-                          <span className="text-white font-bold">{(totalIncome / (totalIncome + totalExpense || 1) * 100).toFixed(1)}% / {(totalExpense / (totalIncome + totalExpense || 1) * 100).toFixed(1)}%</span>
+                   <div className="space-y-8">
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-xs font-bold">
+                          <span className="text-slate-400 uppercase tracking-widest">收支平衡分布</span>
+                          <span className="text-white">{(totalIncome / (totalIncome + totalExpense || 1) * 100).toFixed(1)}% IN / {(totalExpense / (totalIncome + totalExpense || 1) * 100).toFixed(1)}% OUT</span>
                         </div>
-                        <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden flex">
-                          <div className="h-full bg-emerald-400 shadow-lg shadow-emerald-400/20" style={{width: `${(totalIncome / (totalIncome + totalExpense || 1) * 100)}%`}} />
-                          <div className="h-full bg-rose-400 shadow-lg shadow-rose-400/20" style={{width: `${(totalExpense / (totalIncome + totalExpense || 1) * 100)}%`}} />
+                        <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden flex p-1">
+                          <div className="h-full bg-emerald-400 rounded-full shadow-[0_0_15px_rgba(52,211,153,0.3)] transition-all duration-1000" style={{width: `${(totalIncome / (totalIncome + totalExpense || 1) * 100)}%`}} />
+                          <div className="h-full bg-rose-400 rounded-full shadow-[0_0_15px_rgba(248,113,113,0.3)] ml-1 transition-all duration-1000" style={{width: `${(totalExpense / (totalIncome + totalExpense || 1) * 100)}%`}} />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 text-[10px] md:text-[11px]">
-                         <div className="p-3 rounded-xl bg-white/5 border border-white/5">
-                            <p className="text-slate-500 mb-1">未收欠款 (潜在盈利)</p>
-                            <p className="text-amber-400 font-bold text-base md:text-lg">¥ {totalDebt.toLocaleString()}</p>
+                      <div className="grid grid-cols-2 gap-6">
+                         <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+                            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">在途资金 (应收)</p>
+                            <p className="text-amber-400 font-black text-2xl">¥{totalDebt.toLocaleString()}</p>
                          </div>
-                         <div className="p-3 rounded-xl bg-white/5 border border-white/5">
-                            <p className="text-slate-500 mb-1">预估最终利润</p>
-                            <p className="text-emerald-400 font-bold text-base md:text-lg">¥ {(netProfit + totalDebt).toLocaleString()}</p>
+                         <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+                            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">预估最终结余</p>
+                            <p className="text-emerald-400 font-black text-2xl">¥{(netProfit + totalDebt).toLocaleString()}</p>
                          </div>
                       </div>
                    </div>
@@ -594,7 +607,7 @@ function App() {
 
               <DataTable 
                 data={transactions} 
-                title="详细收支流水" 
+                title="现金流详细记录" 
                 isLoading={isLoading} 
                 onEdit={(data: any) => requireAuth(() => openEditModal(data))} 
                 onDelete={(id: any) => requireAuth(() => deleteTransaction(id))} 
@@ -602,19 +615,30 @@ function App() {
             </>
           )}
 
-            {activeTab === 'equipment_prices' && (
+          {activeTab === 'equipment_prices' && (
+            <div className="animate-slide-up">
+              <header className="mb-10">
+                <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">设备资产库</h1>
+                <p className="text-slate-400 text-sm mt-2 font-medium">配置各项设备参考价值，实现资产自动化评估</p>
+              </header>
               <EquipmentCatalog 
                 catalog={equipmentCatalog}
                 onAdd={addCatalogItem}
                 onUpdate={updateCatalogItem}
                 onDelete={deleteCatalogItem}
               />
-            )}
+            </div>
+          )}
 
-            {activeTab === 'history' && (
+          {activeTab === 'history' && (
+            <>
+              <header className="mb-10">
+                <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">全业务档案</h1>
+                <p className="text-slate-400 text-sm mt-2 font-medium">所有财务往来与订单记录的统一时间轴</p>
+              </header>
               <DataTable 
                 data={universalHistory} 
-                title="全业务历史档案" 
+                title="全量业务记录" 
                 isLoading={isLoading} 
                 onEdit={(item: any) => {
                   if (item.source === 'sale') {
@@ -631,17 +655,18 @@ function App() {
                   }
                 }}
               />
-            )}
+            </>
+          )}
 
           {(activeTab === 'fuel' || activeTab === 'stoves') && (
              <>
-               <header className="mb-6 md:mb-10 text-white">
-                 <h1 className="text-2xl md:text-3xl font-bold">{menuItems.find(i => i.id === activeTab)?.label}</h1>
-                 <p className="text-slate-400 text-sm mt-1">管理相关明细</p>
+               <header className="mb-10">
+                 <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">{menuItems.find(i => i.id === activeTab)?.label}</h1>
+                 <p className="text-slate-400 text-sm mt-2 font-medium">专项采购数据分析与记录管理</p>
                </header>
                 <DataTable 
                   data={transactions} 
-                  title="记录列表" 
+                  title="专项流水列表" 
                   isLoading={isLoading} 
                   filterType={activeTab === 'fuel' ? '燃油采购' : activeTab === 'stoves' ? '设备采购' : undefined} 
                   onEdit={(data: any) => requireAuth(() => openEditModal(data))} 
@@ -652,12 +677,13 @@ function App() {
         </div>
       </main>
 
+      {/* Floating Action Button */}
       <button 
-        className="fixed bottom-20 md:bottom-10 right-6 md:right-10 btn-primary p-4 md:px-8 md:py-4 rounded-full shadow-2xl shadow-brand-primary/40 z-50 group"
+        className="fixed bottom-24 md:bottom-10 right-6 md:right-10 btn-primary p-5 md:px-8 md:py-4 rounded-[2rem] shadow-2xl z-50 group border border-white/20"
         onClick={() => requireAuth(() => { setPrefillData(null); setEditData(null); setIsModalOpen(true); })}
       >
-        <PlusCircle size={24} className="group-hover:rotate-90 transition-transform duration-300" /> 
-        <span className="hidden md:inline text-lg ml-2">新增记录</span>
+        <PlusCircle size={28} className="group-hover:rotate-180 transition-transform duration-700 ease-in-out" /> 
+        <span className="hidden md:inline text-xl ml-3 tracking-tighter font-black italic">NEW RECORD</span>
       </button>
 
       <RecordModal 
@@ -689,5 +715,6 @@ function App() {
     </div>
   );
 }
+
 
 export default App;
