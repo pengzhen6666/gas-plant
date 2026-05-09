@@ -17,7 +17,9 @@ import {
   Activity,
   LogOut,
   Unlock,
-  Lock
+  Lock,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { LoginModal } from './components/modals/LoginModal';
