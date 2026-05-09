@@ -82,11 +82,10 @@ export const MerchantExpandableRow = ({ stat, sales, transactions, onNewOrder }:
       }
     });
 
-    // 7. Calculate running balance on the merged list
-    let bal = 0;
+    // 7. Calculate ROW-SPECIFIC balance for clarity (instead of running balance)
     const final = mergedList.map(item => {
-      bal = bal + (item.amountDue || 0) - (item.amountPaid || 0);
-      return { ...item, balance: bal };
+      const rowBalance = (item.amountDue || 0) - (item.amountPaid || 0);
+      return { ...item, balance: rowBalance };
     });
     
     return final.reverse(); // Newest first for display
