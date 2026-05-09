@@ -38,7 +38,7 @@ export const SalesTable = ({ data, transactions, isLoading, onEdit, onDelete, on
           records_count: 0,
           settled_count: 0,
           settlement_type: sale.settlement_type,
-          assigned_equipment: sale.assigned_equipment
+          assigned_equipment: ''
         };
       }
       statsMap[key].total_quantity += Number(sale.quantity);
@@ -48,7 +48,15 @@ export const SalesTable = ({ data, transactions, isLoading, onEdit, onDelete, on
       statsMap[key].records_count += 1;
       if (sale.status === '已付款') statsMap[key].settled_count += 1;
       if (sale.settlement_type) statsMap[key].settlement_type = sale.settlement_type;
-      if (sale.assigned_equipment) statsMap[key].assigned_equipment = sale.assigned_equipment;
+      
+      // Aggregate unique equipment
+      if (sale.assigned_equipment) {
+        const current = statsMap[key].assigned_equipment || '';
+        const newEquip = sale.assigned_equipment;
+        if (!current.includes(newEquip)) {
+          statsMap[key].assigned_equipment = current ? `${current}, ${newEquip}` : newEquip;
+        }
+      }
     });
     return Object.values(statsMap).sort((a, b) => b.total_debt - a.total_debt);
   }, [filteredData]);
