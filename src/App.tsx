@@ -524,8 +524,8 @@ function App() {
                 data={transactions} 
                 title="详细收支流水" 
                 isLoading={isLoading} 
-                onEdit={(data) => requireAuth(() => openEditModal(data))} 
-                onDelete={(id) => requireAuth(() => deleteTransaction(id))} 
+                onEdit={(data: any) => requireAuth(() => openEditModal(data))} 
+                onDelete={(id: any) => requireAuth(() => deleteTransaction(id))} 
               />
             </>
           )}
@@ -541,8 +541,8 @@ function App() {
                   title="记录列表" 
                   isLoading={isLoading} 
                   filterType={activeTab === 'fuel' ? '燃油采购' : activeTab === 'stoves' ? '设备采购' : undefined} 
-                  onEdit={(data) => requireAuth(() => openEditModal(data))} 
-                  onDelete={(id) => requireAuth(() => deleteTransaction(id))} 
+                  onEdit={(data: any) => requireAuth(() => openEditModal(data))} 
+                  onDelete={(id: any) => requireAuth(() => deleteTransaction(id))} 
                 />
              </>
           )}
