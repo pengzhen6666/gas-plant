@@ -61,12 +61,22 @@ export const SalesTable = ({ data, transactions, equipmentCatalog, isLoading, on
       // Calculate Asset Value
       let assetValue = 0;
       const equipStr = statsMap[key].assigned_equipment || '';
-      equipmentCatalog.forEach(item => {
+      
+      // Sort catalog items by name length descending to match longest possible name first
+      const sortedCatalog = [...equipmentCatalog].sort((a, b) => b.name.length - a.name.length);
+      
+      sortedCatalog.forEach(item => {
         if (equipStr.includes(item.name)) {
-          // Simple quantity extraction: e.g. "2个炉灶" or "50油箱x2"
-          const regex = new RegExp(`(\\d+)[个|套|只|x|*]?${item.name}`, 'i');
-          const match = equipStr.match(regex) || equipStr.match(new RegExp(`${item.name}[^\\d]*(\\d+)`, 'i'));
-          const qty = match ? parseInt(match[1]) : 1;
+          // Stricter quantity extraction: only match if followed by quantity indicators
+          // 1. Check for indicators like "2个", "x2", "*2"
+          const qtyRegex = new RegExp(`(\\d+)[个|套|只|x|*]${item.name}|${item.name}[^\\d]*[x|*](\\d+)`, 'i');
+          const match = equipStr.match(qtyRegex);
+          
+          let qty = 1;
+          if (match) {
+            qty = parseInt(match[1] || match[2]);
+          }
+          
           assetValue += item.price * qty;
         }
       });
