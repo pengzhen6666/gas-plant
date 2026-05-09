@@ -551,7 +551,7 @@ function App() {
                 <p className="text-slate-400 text-sm mt-2 font-medium">业务全景盈亏实时计算与资金流监控</p>
               </header>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 mb-10">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8 mb-6 md:mb-10">
                 <StatCard title="累计实收" value={`¥${totalIncome.toLocaleString()}`} icon={ArrowUp} colorClass="emerald-400" />
                 <StatCard title="累计支出" value={`¥${totalExpense.toLocaleString()}`} icon={ArrowDown} colorClass="rose-400" />
                 <div className="col-span-2 md:col-span-1">
@@ -566,40 +566,44 @@ function App() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <div className="glass-card p-6 flex flex-col justify-center items-center text-center">
-                  <div className={`p-4 rounded-2xl mb-3 ${netProfit >= 0 ? 'bg-emerald-400/10 text-emerald-400' : 'bg-rose-400/10 text-rose-400'}`}>
-                    <Activity size={32} />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8 mb-8">
+                {/* Compact Assessment & Liquidity Analysis */}
+                <div className="lg:col-span-1 glass-card p-4 flex md:flex-col items-center justify-between md:justify-center text-center gap-4">
+                  <div className={`p-3 rounded-xl ${netProfit >= 0 ? 'bg-emerald-400/10 text-emerald-400' : 'bg-rose-400/10 text-rose-400'}`}>
+                    <Activity size={24} />
                   </div>
-                  <h4 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">经营状态评估</h4>
-                  <p className={`text-xl font-black ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {netProfit >= 0 ? '盈利状态良好' : '当前处于亏损'}
-                  </p>
+                  <div className="flex-1 md:flex-none text-left md:text-center">
+                    <h4 className="text-slate-500 text-[10px] font-black uppercase tracking-widest">状态评估</h4>
+                    <p className={`text-base md:text-xl font-black ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {netProfit >= 0 ? '盈利良好' : '当前亏损'}
+                    </p>
+                  </div>
                 </div>
-                <div className="lg:col-span-2 glass-card p-6">
-                   <div className="flex items-center gap-3 mb-6">
-                     <div className="p-2 bg-brand-primary/10 rounded-lg text-brand-primary"><PieChart size={18} /></div>
-                     <span className="text-base font-black">资金流动性分析</span>
+
+                <div className="lg:col-span-2 glass-card p-4">
+                   <div className="flex items-center gap-2 mb-4">
+                     <div className="p-1.5 bg-brand-primary/10 rounded-lg text-brand-primary"><PieChart size={16} /></div>
+                     <span className="text-sm font-black">资金流动性</span>
                    </div>
-                   <div className="space-y-8">
-                      <div className="space-y-3">
-                        <div className="flex justify-between text-xs font-bold">
-                          <span className="text-slate-400 uppercase tracking-widest">收支平衡分布</span>
-                          <span className="text-white">{(totalIncome / (totalIncome + totalExpense || 1) * 100).toFixed(1)}% 流入 / {(totalExpense / (totalIncome + totalExpense || 1) * 100).toFixed(1)}% 流出</span>
+                   <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-[10px] font-bold">
+                          <span className="text-slate-500 uppercase">流入/流出</span>
+                          <span className="text-white">{(totalIncome / (totalIncome + totalExpense || 1) * 100).toFixed(1)}% / {(totalExpense / (totalIncome + totalExpense || 1) * 100).toFixed(1)}%</span>
                         </div>
-                        <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden flex p-1">
-                          <div className="h-full bg-emerald-400 rounded-full shadow-[0_0_15px_rgba(52,211,153,0.3)] transition-all duration-1000" style={{width: `${(totalIncome / (totalIncome + totalExpense || 1) * 100)}%`}} />
-                          <div className="h-full bg-rose-400 rounded-full shadow-[0_0_15px_rgba(248,113,113,0.3)] ml-1 transition-all duration-1000" style={{width: `${(totalExpense / (totalIncome + totalExpense || 1) * 100)}%`}} />
+                        <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden flex">
+                          <div className="h-full bg-emerald-400 rounded-full transition-all duration-1000" style={{width: `${(totalIncome / (totalIncome + totalExpense || 1) * 100)}%`}} />
+                          <div className="h-full bg-rose-400 rounded-full ml-0.5 transition-all duration-1000" style={{width: `${(totalExpense / (totalIncome + totalExpense || 1) * 100)}%`}} />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-6">
-                         <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5">
-                            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">在途资金 (应收)</p>
-                            <p className="text-amber-400 font-black text-2xl">¥{totalDebt.toLocaleString()}</p>
+                      <div className="grid grid-cols-2 gap-3">
+                         <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                            <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-1">在途 (应收)</p>
+                            <p className="text-amber-400 font-black text-sm">¥{totalDebt.toLocaleString()}</p>
                          </div>
-                         <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5">
-                            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">预估最终结余</p>
-                            <p className="text-emerald-400 font-black text-2xl">¥{(netProfit + totalDebt).toLocaleString()}</p>
+                         <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                            <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-1">预估结余</p>
+                            <p className="text-emerald-400 font-black text-sm">¥{(netProfit + totalDebt).toLocaleString()}</p>
                          </div>
                       </div>
                    </div>
