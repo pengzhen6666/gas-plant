@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 export const StatCard = ({ title, value, subValue, icon: Icon, colorClass, trend, isHighlight }: any) => (
   <div className={`glass-card p-6 border-l-4 ${isHighlight ? 'bg-brand-primary/5 border-l-brand-primary shadow-xl shadow-brand-primary/5' : `border-l-${colorClass}`}`}>

@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { ChevronUp, ChevronDown, Phone as PhoneIcon, Package, History as HistoryIcon, HandCoins, AlertCircle, BadgeDollarSign, ShoppingCart } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ChevronUp, ChevronDown, Phone as PhoneIcon, Package, History as HistoryIcon, ShoppingCart } from 'lucide-react';
 import { kgToJin } from '../../utils/index';
-import type { Sale, Transaction } from '../../types/index';
+import type { Sale, Transaction, MerchantSummary, SettlementType } from '../../types/index';
 
-export const MerchantExpandableRow = ({ stat, sales, transactions, onNewOrder, onEdit, onDelete, onQuickPay }: any) => {
+export const MerchantExpandableRow = ({ stat, sales, transactions, onNewOrder }: { stat: MerchantSummary, sales: Sale[], transactions: Transaction[], onNewOrder: (name: string, phone: string, type?: SettlementType) => void }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = stat.total_amount > 0 ? (stat.total_paid / stat.total_amount) * 100 : 0;
 
@@ -20,7 +20,7 @@ export const MerchantExpandableRow = ({ stat, sales, transactions, onNewOrder, o
     );
 
     // 3. Process orders
-    merchantOrders.forEach(s => {
+    merchantOrders.forEach((s: Sale) => {
       list.push({ 
         date: s.delivery_date, 
         type: '订油 (销售)', 
@@ -33,7 +33,7 @@ export const MerchantExpandableRow = ({ stat, sales, transactions, onNewOrder, o
     });
 
     // 4. Process all payments independently
-    merchantPayments.forEach(t => {
+    merchantPayments.forEach((t: Transaction) => {
       list.push({ 
         date: t.date, 
         type: '收款 (还账)', 
@@ -52,7 +52,7 @@ export const MerchantExpandableRow = ({ stat, sales, transactions, onNewOrder, o
     const mergedList: any[] = [];
     const processedPaymentIds = new Set();
 
-    list.forEach((item, idx) => {
+    list.forEach((item) => {
       if (item.type === '订油 (销售)') {
         // Look for a payment on the same date that hasn't been used yet
         const sameDayPayment = list.find(p => 
@@ -101,17 +101,17 @@ export const MerchantExpandableRow = ({ stat, sales, transactions, onNewOrder, o
         <td className="py-5 px-4">
           <div className="flex items-center gap-3">
             {isExpanded ? <ChevronUp size={16} className="text-brand-primary" /> : <ChevronDown size={16} className="text-slate-500" />}
-            <div>
-              <div className="flex items-center gap-2">
-                <div className="font-bold text-white text-lg">{stat.customer_name}</div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="font-bold text-white text-base md:text-lg truncate">{stat.customer_name}</div>
                 {stat.settlement_type && (
                   <span className="px-1.5 py-0.5 bg-brand-primary/10 text-brand-primary text-[10px] rounded border border-brand-primary/20">{stat.settlement_type}</span>
                 )}
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
-                <div className="flex items-center gap-1"><PhoneIcon size={10} /> {stat.phone || '未记录电话'}</div>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400 mt-1">
+                <div className="flex items-center gap-1"><PhoneIcon size={10} /> {stat.phone || '无电话'}</div>
                 {stat.assigned_equipment && (
-                  <div className="flex items-center gap-1 px-2 py-0.5 bg-brand-primary/10 text-brand-primary rounded border border-brand-primary/20">
+                  <div className="flex items-center gap-1 px-2 py-0.5 bg-brand-primary/10 text-brand-primary rounded border border-brand-primary/20 scale-90 origin-left">
                     <Package size={10} /> 
                     <span className="font-bold">设备: {stat.assigned_equipment}</span>
                   </div>
@@ -120,18 +120,19 @@ export const MerchantExpandableRow = ({ stat, sales, transactions, onNewOrder, o
             </div>
           </div>
         </td>
-        <td className="py-5 px-2 text-right">
+        <td className="hidden md:table-cell py-5 px-2 text-right">
           <div className="text-white font-bold">{stat.total_quantity.toLocaleString()} kg</div>
           <div className="text-[10px] text-brand-primary">折合: {kgToJin(stat.total_quantity).toLocaleString()} 斤</div>
           <div className="text-[10px] text-slate-500 mt-0.5">订单数: {stat.records_count}</div>
         </td>
-        <td className="py-5 px-2 text-right text-emerald-400">¥ {stat.total_paid.toLocaleString()}</td>
+        <td className="hidden md:table-cell py-5 px-2 text-right text-emerald-400">¥ {stat.total_paid.toLocaleString()}</td>
         <td className="py-5 px-2 text-right">
-          <span className={`font-black text-xl ${stat.total_debt > 0.01 ? 'text-rose-400' : 'text-emerald-400'}`}>
+          <span className={`font-black text-lg md:text-xl ${stat.total_debt > 0.01 ? 'text-rose-400' : 'text-emerald-400'}`}>
             ¥ {Math.max(0, stat.total_debt).toLocaleString()}
           </span>
+          <div className="md:hidden text-[10px] text-slate-500 mt-0.5">{stat.total_quantity}kg</div>
         </td>
-        <td className="py-5 px-2 text-center min-w-[120px]">
+        <td className="hidden md:table-cell py-5 px-2 text-center min-w-[120px]">
           <div className="flex flex-col items-center gap-1 px-4">
             <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
               <div className="h-full bg-brand-primary" style={{width: `${progress}%`}} />
@@ -142,68 +143,65 @@ export const MerchantExpandableRow = ({ stat, sales, transactions, onNewOrder, o
         <td className="py-5 px-4 text-right" onClick={e => e.stopPropagation()}>
            <button 
             onClick={() => onNewOrder(stat.customer_name, stat.phone, stat.settlement_type)}
-            className="btn-primary py-2 px-3 text-xs flex items-center gap-2 justify-end ml-auto"
+            className="btn-primary p-2 md:py-2 md:px-3 text-xs flex items-center gap-2 justify-end ml-auto rounded-lg"
            >
-             <ShoppingCart size={14} /> 再订一单
+             <ShoppingCart size={14} /> <span className="hidden md:inline">再订一单</span>
            </button>
         </td>
       </tr>
       {isExpanded && (
         <tr>
           <td colSpan={6} className="p-0 border-b border-white/5 bg-black/40">
-            <div className="p-6 animate-in slide-in-from-top-2 duration-300">
-               <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white font-bold flex items-center gap-2">
-                    <HistoryIcon className="text-brand-primary" size={18} /> 真实对账流水 (含备注说明)
+            <div className="p-3 md:p-6 animate-in slide-in-from-top-2 duration-300">
+               <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-2">
+                  <h3 className="text-white font-bold flex items-center gap-2 text-sm md:text-base">
+                    <HistoryIcon className="text-brand-primary" size={18} /> 对账流水
                   </h3>
-                  <div className="flex gap-4 text-xs">
+                  <div className="flex gap-4 text-[10px] md:text-xs">
                      <div className="text-slate-400">商户: <span className="text-white font-bold">{stat.customer_name}</span></div>
                      <div className="text-slate-400">总欠款: <span className="text-rose-400 font-bold">¥{Math.max(0, stat.total_debt).toLocaleString()}</span></div>
                   </div>
                </div>
-               <div className="overflow-hidden rounded-2xl border border-white/10 bg-bg-secondary shadow-2xl">
-                  <table className="w-full text-sm">
+               <div className="overflow-x-auto rounded-xl border border-white/10 bg-bg-secondary shadow-2xl">
+                  <table className="w-full text-[11px] md:text-sm">
                     <thead>
-                      <tr className="bg-white/5 text-slate-400 border-b border-white/10">
-                        <th className="py-4 px-6 text-left font-bold uppercase tracking-wider">日期</th>
-                        <th className="py-4 px-6 text-left font-bold uppercase tracking-wider">事项内容</th>
-                        <th className="py-4 px-6 text-left font-bold uppercase tracking-wider">备注说明</th>
-                        <th className="py-4 px-6 text-right font-bold uppercase tracking-wider text-rose-400">应收 (油钱)</th>
-                        <th className="py-4 px-6 text-right font-bold uppercase tracking-wider text-emerald-400">实收 (已付)</th>
-                        <th className="py-4 px-6 text-right font-bold uppercase tracking-wider bg-white/5">剩余总欠款</th>
+                      <tr className="bg-white/5 text-slate-400 border-b border-white/10 text-[10px] md:text-xs">
+                        <th className="py-3 px-3 md:px-6 text-left font-bold uppercase tracking-wider">日期</th>
+                        <th className="py-3 px-3 md:px-6 text-left font-bold uppercase tracking-wider">事项</th>
+                        <th className="hidden md:table-cell py-3 px-6 text-left font-bold uppercase tracking-wider">备注说明</th>
+                        <th className="py-3 px-3 md:px-6 text-right font-bold uppercase tracking-wider text-rose-400">应收</th>
+                        <th className="py-3 px-3 md:px-6 text-right font-bold uppercase tracking-wider text-emerald-400">实收</th>
+                        <th className="py-3 px-3 md:px-6 text-right font-bold uppercase tracking-wider bg-white/5">余欠</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
                       {combinedList.map((row, i) => (
                         <tr key={i} className="hover:bg-white/5 transition-colors group">
-                          <td className="py-4 px-6 text-slate-400 font-mono">{row.date}</td>
-                          <td className="py-4 px-6">
-                            <span className={`inline-flex items-center gap-1.5 font-bold px-2 py-1 rounded-lg text-[10px] ${row.type.includes('现结') ? 'bg-emerald-400/10 text-emerald-400' : row.type.includes('赊账') ? 'bg-rose-400/10 text-rose-400' : 'bg-brand-primary/10 text-brand-primary'}`}>
-                              {row.type.includes('现结') ? <HandCoins size={12} /> : row.type.includes('赊账') ? <AlertCircle size={12} /> : <BadgeDollarSign size={12} />}
-                              {row.type}
+                          <td className="py-3 px-3 md:px-6 text-slate-400 font-mono whitespace-nowrap">{row.date.slice(5)}</td>
+                          <td className="py-3 px-3 md:px-6">
+                            <span className={`inline-flex items-center gap-1 font-bold px-1.5 py-0.5 rounded text-[9px] md:text-[10px] whitespace-nowrap ${row.type.includes('现结') ? 'bg-emerald-400/10 text-emerald-400' : row.type.includes('赊账') ? 'bg-rose-400/10 text-rose-400' : 'bg-brand-primary/10 text-brand-primary'}`}>
+                              {row.type.replace(' (销售)', '').replace(' (还账)', '')}
                             </span>
                           </td>
-                          <td className="py-4 px-6 text-slate-500 text-[11px] max-w-[200px] truncate" title={row.notes}>
+                          <td className="hidden md:table-cell py-3 px-6 text-slate-500 text-[11px] max-w-[200px] truncate" title={row.notes}>
                             {row.notes || '-'}
                           </td>
-                          <td className="py-4 px-6 text-right font-bold text-white">
+                          <td className="py-3 px-3 md:px-6 text-right font-bold text-white whitespace-nowrap">
                             {row.amountDue > 0 ? `¥${row.amountDue.toLocaleString()}` : '-'}
                           </td>
-                          <td className="py-4 px-6 text-right font-bold text-emerald-400">
+                          <td className="py-3 px-3 md:px-6 text-right font-bold text-emerald-400 whitespace-nowrap">
                             {row.amountPaid > 0 ? `¥${row.amountPaid.toLocaleString()}` : '-'}
                           </td>
-                          <td className={`py-4 px-6 text-right font-black bg-white/5 group-hover:bg-white/10 transition-colors ${row.balance > 0.01 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                          <td className={`py-3 px-3 md:px-6 text-right font-black bg-white/5 group-hover:bg-white/10 transition-colors whitespace-nowrap ${row.balance > 0.01 ? 'text-rose-400' : 'text-emerald-400'}`}>
                             ¥ {Math.max(0, row.balance).toLocaleString()}
                           </td>
                         </tr>
                       ))}
-                      {combinedList.length === 0 && <tr><td colSpan={6} className="py-12 text-center text-slate-600 italic">该商户暂无任何订货或往来记录</td></tr>}
                     </tbody>
                   </table>
                </div>
-               <div className="mt-4 p-4 rounded-xl bg-brand-primary/5 border border-brand-primary/10 text-[11px] text-slate-500 italic flex justify-between items-center">
-                 <span>提示：系统会自动匹配日期，只有【同一天】订油且交钱才记为现结，不同日期的订油和还款将分开显示。</span>
-                 <span className="text-emerald-400">当前商户状态：{stat.total_debt > 0.01 ? '有欠款待追回' : '账目已清'}</span>
+               <div className="mt-4 p-3 rounded-xl bg-brand-primary/5 border border-brand-primary/10 text-[9px] md:text-[11px] text-slate-500 italic">
+                 <span>提示：系统会自动匹配日期，只有【同一天】订油且交钱才记为现结。</span>
                </div>
             </div>
           </td>

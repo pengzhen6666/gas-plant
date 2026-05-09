@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Filter, Search, Loader2, Wallet, Edit2, Trash2, Package } from 'lucide-react';
 import { MerchantExpandableRow } from './MerchantExpandableRow';
 import { kgToJin } from '../../utils/index';
@@ -89,74 +89,133 @@ export const SalesTable = ({ data, transactions, isLoading, onEdit, onDelete, on
         
         <div className="overflow-x-auto">
           {view === 'list' ? (
-            <table className="w-full">
-              <thead>
-                <tr className="text-left border-bottom border-white/5 text-slate-400 text-sm">
-                  <th className="pb-4 px-2">订货日期</th>
-                  <th className="pb-4 px-2">商家名称</th>
-                  <th className="pb-4 px-2">配备设备</th>
-                  <th className="pb-4 px-2">备注说明</th>
-                  <th className="pb-4 px-2 text-right">订油量</th>
-                  <th className="pb-4 px-2 text-right">订单总额</th>
-                  <th className="pb-4 px-2 text-right">已收金额</th>
-                  <th className="pb-4 px-2 text-right text-rose-400">剩余欠款</th>
-                  <th className="pb-4 px-2 text-center">状态</th>
-                  <th className="pb-4 px-2 text-center">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
+            <>
+              {/* Desktop Table View */}
+              <table className="hidden md:table w-full">
+                <thead>
+                  <tr className="text-left border-bottom border-white/5 text-slate-400 text-sm">
+                    <th className="pb-4 px-2">订货日期</th>
+                    <th className="pb-4 px-2">商家名称</th>
+                    <th className="pb-4 px-2">配备设备</th>
+                    <th className="pb-4 px-2">备注说明</th>
+                    <th className="pb-4 px-2 text-right">订油量</th>
+                    <th className="pb-4 px-2 text-right">订单总额</th>
+                    <th className="pb-4 px-2 text-right">已收金额</th>
+                    <th className="pb-4 px-2 text-right text-rose-400">剩余欠款</th>
+                    <th className="pb-4 px-2 text-center">状态</th>
+                    <th className="pb-4 px-2 text-center">操作</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {filteredData.map((sale) => {
+                    const debt = Number(sale.total_price) - Number(sale.paid_amount);
+                    return (
+                      <tr key={sale.id} className="group hover:bg-white/5 transition-colors">
+                        <td className="py-4 px-2 text-slate-400 text-sm">{sale.delivery_date}</td>
+                        <td className="py-4 px-2">
+                          <div className="font-medium text-white">{sale.customer_name}</div>
+                          <div className="text-[10px] text-slate-500 font-mono mt-1">{sale.phone || '-'}</div>
+                        </td>
+                        <td className="py-4 px-2">
+                          {sale.assigned_equipment ? (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-brand-primary/10 text-brand-primary text-[10px] rounded border border-brand-primary/20 w-fit">
+                              <Package size={10} /> {sale.assigned_equipment}
+                            </div>
+                          ) : (
+                            <span className="text-slate-600 text-[10px]">-</span>
+                          )}
+                        </td>
+                        <td className="py-4 px-2 text-slate-500 text-xs max-w-[150px] truncate" title={sale.notes}>
+                          {sale.notes || '-'}
+                        </td>
+                        <td className="py-4 px-2 text-right whitespace-nowrap">
+                           <div className="inline-flex items-baseline gap-1.5">
+                             <span className="text-slate-300 font-mono">{sale.quantity} kg</span>
+                             <span className="text-[10px] text-brand-primary/80">({kgToJin(sale.quantity)} 斤)</span>
+                           </div>
+                        </td>
+                        <td className="py-4 px-2 text-right font-semibold whitespace-nowrap">¥ {Number(sale.total_price).toLocaleString()}</td>
+                        <td className="py-4 px-2 text-right text-emerald-400 whitespace-nowrap">¥ {Number(sale.paid_amount).toLocaleString()}</td>
+                        <td className="py-4 px-2 text-right font-bold text-rose-400 whitespace-nowrap">¥ {Math.max(0, debt).toLocaleString()}</td>
+                        <td className="py-4 px-2 text-center">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap ${
+                            sale.status === '已付款' ? 'bg-emerald-400/10 text-emerald-400' : 
+                            sale.status === '部分付款' ? 'bg-amber-400/10 text-amber-400' : 'bg-rose-400/10 text-rose-400'
+                          }`}>{sale.status}</span>
+                        </td>
+                        <td className="py-4 px-2 text-center">
+                          <div className="flex items-center justify-center gap-2 whitespace-nowrap">
+                            {debt > 0.01 && (
+                              <button onClick={() => onQuickPay(sale)} className="flex items-center gap-1 px-2 py-1 bg-brand-primary/20 text-brand-primary text-[10px] font-bold rounded-lg hover:bg-brand-primary hover:text-white transition-all whitespace-nowrap">
+                                <Wallet size={12} /> 去还款
+                              </button>
+                            )}
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => onEdit(sale)} className="p-1 hover:text-brand-primary"><Edit2 size={14} /></button>
+                              <button onClick={() => onDelete(sale.id)} className="p-1 hover:text-rose-400"><Trash2 size={14} /></button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-4">
                 {filteredData.map((sale) => {
                   const debt = Number(sale.total_price) - Number(sale.paid_amount);
                   return (
-                    <tr key={sale.id} className="group hover:bg-white/5 transition-colors">
-                      <td className="py-4 px-2 text-slate-400 text-sm">{sale.delivery_date}</td>
-                      <td className="py-4 px-2">
-                        <div className="font-medium text-white">{sale.customer_name}</div>
-                        <div className="text-[10px] text-slate-500 font-mono mt-1">{sale.phone || '-'}</div>
-                      </td>
-                      <td className="py-4 px-2">
-                        {sale.assigned_equipment ? (
-                          <div className="flex items-center gap-1 px-2 py-1 bg-brand-primary/10 text-brand-primary text-[10px] rounded border border-brand-primary/20 w-fit">
-                            <Package size={10} /> {sale.assigned_equipment}
-                          </div>
-                        ) : (
-                          <span className="text-slate-600 text-[10px]">-</span>
-                        )}
-                      </td>
-                      <td className="py-4 px-2 text-slate-500 text-xs max-w-[150px] truncate" title={sale.notes}>
-                        {sale.notes || '-'}
-                      </td>
-                      <td className="py-4 px-2 text-right">
-                         <div className="text-slate-300 font-mono">{sale.quantity} kg</div>
-                         <div className="text-[10px] text-brand-primary">{kgToJin(sale.quantity)} 斤</div>
-                      </td>
-                      <td className="py-4 px-2 text-right font-semibold">¥ {Number(sale.total_price).toLocaleString()}</td>
-                      <td className="py-4 px-2 text-right text-emerald-400">¥ {Number(sale.paid_amount).toLocaleString()}</td>
-                      <td className="py-4 px-2 text-right font-bold text-rose-400">¥ {Math.max(0, debt).toLocaleString()}</td>
-                      <td className="py-4 px-2 text-center">
+                    <div key={sale.id} className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-white truncate">{sale.customer_name}</div>
+                          <div className="text-[10px] text-slate-500 mt-1">{sale.delivery_date} · {sale.phone || '无电话'}</div>
+                        </div>
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                           sale.status === '已付款' ? 'bg-emerald-400/10 text-emerald-400' : 
                           sale.status === '部分付款' ? 'bg-amber-400/10 text-amber-400' : 'bg-rose-400/10 text-rose-400'
                         }`}>{sale.status}</span>
-                      </td>
-                      <td className="py-4 px-2 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          {debt > 0.01 && (
-                            <button onClick={() => onQuickPay(sale)} className="flex items-center gap-1 px-2 py-1 bg-brand-primary/20 text-brand-primary text-[10px] font-bold rounded-lg hover:bg-brand-primary hover:text-white transition-all">
-                              <Wallet size={12} /> 去还款
-                            </button>
-                          )}
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => onEdit(sale)} className="p-1 hover:text-brand-primary"><Edit2 size={14} /></button>
-                            <button onClick={() => onDelete(sale.id)} className="p-1 hover:text-rose-400"><Trash2 size={14} /></button>
-                          </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="bg-black/20 p-2 rounded-lg border border-white/5">
+                          <p className="text-slate-500 text-[9px] uppercase font-bold mb-1">订油量</p>
+                          <p className="text-white font-mono">{sale.quantity}kg ({kgToJin(sale.quantity)}斤)</p>
                         </div>
-                      </td>
-                    </tr>
+                        <div className="bg-black/20 p-2 rounded-lg border border-white/5">
+                          <p className="text-slate-500 text-[9px] uppercase font-bold mb-1">剩余欠款</p>
+                          <p className="text-rose-400 font-bold">¥{Math.max(0, debt).toLocaleString()}</p>
+                        </div>
+                      </div>
+
+                      {sale.assigned_equipment && (
+                        <div className="flex items-center gap-1 text-[10px] text-brand-primary">
+                           <Package size={10} /> 已配: {sale.assigned_equipment}
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center pt-3 border-t border-white/5">
+                        <div className="flex gap-4">
+                          <button onClick={() => onEdit(sale)} className="text-xs text-slate-400 flex items-center gap-1 hover:text-brand-primary">
+                            <Edit2 size={12} /> 编辑
+                          </button>
+                          <button onClick={() => onDelete(sale.id)} className="text-xs text-slate-400 flex items-center gap-1 hover:text-rose-400">
+                            <Trash2 size={12} /> 删除
+                          </button>
+                        </div>
+                        {debt > 0.01 && (
+                          <button onClick={() => onQuickPay(sale)} className="px-3 py-1 bg-brand-primary text-white text-xs font-bold rounded-lg shadow-lg shadow-brand-primary/20">
+                            去还款
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            </>
           ) : (
             <table className="w-full">
               <thead>
@@ -177,9 +236,6 @@ export const SalesTable = ({ data, transactions, isLoading, onEdit, onDelete, on
                     sales={data} 
                     transactions={transactions}
                     onNewOrder={onNewOrder}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    onQuickPay={onQuickPay}
                   />
                 ))}
               </tbody>

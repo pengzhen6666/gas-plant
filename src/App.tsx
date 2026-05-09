@@ -1,26 +1,22 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   LayoutDashboard, 
   ReceiptIndianRupee, 
   Fuel, 
-  FlameKindling, 
+  FlameKindling,
   Settings,
   TrendingUp,
-  TrendingDown,
   PlusCircle,
-  ArrowUpRight,
-  ArrowDownRight,
-  History,
-  Loader2,
+  TrendingDown,
+  Wallet,
   Users,
   AlertCircle,
   BarChart3,
-  ArrowRight,
+  PieChart,
+  History,
   ArrowUp,
   ArrowDown,
-  Activity,
-  PieChart,
-  Wallet
+  Activity
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
@@ -293,8 +289,9 @@ function App() {
   }, [merchantSummaries]);
 
   return (
-    <div className="flex min-h-screen bg-bg-primary text-slate-100 font-sans">
-      <aside className="w-72 bg-bg-secondary border-r border-white/5 p-8 flex flex-col gap-8 sticky top-0 h-screen overflow-y-auto">
+    <div className="flex min-h-screen bg-bg-primary text-slate-100 font-sans pb-20 md:pb-0">
+      {/* Sidebar - Desktop Only */}
+      <aside className="hidden md:flex w-72 bg-bg-secondary border-r border-white/5 p-8 flex-col gap-8 sticky top-0 h-screen overflow-y-auto">
         <div className="flex items-center gap-3 px-2">
           <div className="w-10 h-10 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-xl flex items-center justify-center shadow-lg shadow-brand-primary/20">
             <FlameKindling color="white" />
@@ -313,40 +310,57 @@ function App() {
         </div>
       </aside>
 
-      <main className="flex-1 p-6 lg:p-12 max-w-7xl mx-auto w-full">
+      {/* Bottom Navigation - Mobile Only */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-secondary/95 backdrop-blur-lg border-t border-white/5 flex justify-around items-center py-3 px-2 z-[100] safe-area-inset-bottom">
+        {menuItems.map((item) => (
+          <button 
+            key={item.id} 
+            onClick={() => setActiveTab(item.id)}
+            className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-brand-primary' : 'text-slate-500'}`}
+          >
+            <item.icon size={20} className={activeTab === item.id ? 'scale-110' : ''} />
+            <span className="text-[10px] font-bold">{item.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      <main className="flex-1 p-4 md:p-12 max-w-7xl mx-auto w-full">
         <div className="animate-in fade-in duration-700">
           {activeTab === 'dashboard' && (
             <>
-              <header className="mb-10">
-                <h1 className="text-3xl font-bold">财务中心</h1>
-                <p className="text-slate-400 mt-1">实时经营数据与资金流监控</p>
+              <header className="mb-6 md:mb-10">
+                <h1 className="text-2xl md:text-3xl font-bold">财务中心</h1>
+                <p className="text-slate-400 text-sm mt-1">实时经营数据与资金流监控</p>
               </header>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-10">
                 <StatCard title="累计总收入" value={`¥ ${totalIncome.toLocaleString()}`} icon={TrendingUp} colorClass="emerald-400" />
-                <StatCard title="累计总欠款" value={`¥ ${Math.max(0, totalDebt).toLocaleString()}`} icon={AlertCircle} colorClass="rose-400" subValue="市场待收回资金" />
-                <StatCard title="累计总用油" value={`${totalOilSold.toLocaleString()} kg (${kgToJin(totalOilSold).toLocaleString()} 斤)`} icon={BarChart3} colorClass="brand-primary" />
+                <StatCard title="累计总欠款" value={`¥ ${Math.max(0, totalDebt).toLocaleString()}`} icon={AlertCircle} colorClass="rose-400" />
+                <StatCard title="累计总用油" value={`${totalOilSold.toLocaleString()}kg`} subValue={`${kgToJin(totalOilSold).toLocaleString()}斤`} icon={BarChart3} colorClass="brand-primary" />
                 <StatCard title="累计总支出" value={`¥ ${totalExpense.toLocaleString()}`} icon={TrendingDown} colorClass="amber-400" />
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="glass-card p-6">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <AlertCircle className="text-rose-400" size={20} /> 商户欠款聚合名单
+                <div className="glass-card p-4 md:p-6">
+                  <h3 className="text-base md:text-lg font-semibold mb-4 flex items-center gap-2">
+                    <AlertCircle className="text-rose-400" size={18} /> 商户欠款聚合名单
                   </h3>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {urgentDebtList.map((item, idx) => {
                       const oldestUnpaid = sales.find(s => s.customer_name === item.customer_name && s.status !== '已付款');
                       return (
                         <div key={idx} className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5 hover:border-brand-primary/30 transition-colors group">
-                          <div>
-                            <p className="font-medium">{item.customer_name}</p>
-                            <p className="text-[10px] text-slate-500 font-mono mt-1">{item.phone || '无电话'}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium truncate text-sm md:text-base">{item.customer_name}</p>
+                            <p className="text-[10px] text-slate-500 font-mono mt-0.5">{item.phone || '无电话'}</p>
                           </div>
-                          <div className="flex flex-col items-end">
-                            <span className="text-rose-400 font-bold text-lg">¥ {item.total_debt.toLocaleString()}</span>
+                          <div className="flex flex-col items-end ml-3 shrink-0">
+                            <div className="flex items-center gap-1 text-rose-400 font-bold">
+                              <span className="text-[10px] opacity-70">欠</span>
+                              <span className="text-base md:text-lg">¥ {item.total_debt.toLocaleString()}</span>
+                            </div>
                             {oldestUnpaid && (
                               <button 
                                 onClick={() => openPayModal(oldestUnpaid)}
-                                className="flex items-center gap-1 mt-1 px-2 py-1 bg-brand-primary/20 text-brand-primary text-[10px] font-bold rounded-md hover:bg-brand-primary hover:text-white transition-all opacity-0 group-hover:opacity-100"
+                                className="flex items-center gap-1 mt-1 px-2 py-1 bg-brand-primary/20 text-brand-primary text-[10px] font-bold rounded-md hover:bg-brand-primary hover:text-white transition-all md:opacity-0 md:group-hover:opacity-100"
                               >
                                 <Wallet size={10} /> 录入还款
                               </button>
@@ -355,25 +369,24 @@ function App() {
                         </div>
                       );
                     })}
-                    {urgentDebtList.length === 0 && <p className="text-center text-slate-500 py-4">所有商户账目已结清！</p>}
+                    {urgentDebtList.length === 0 && <p className="text-center text-slate-500 py-4 text-sm">所有商户账目已结清！</p>}
                   </div>
                   <button onClick={() => setActiveTab('merchants')} className="w-full mt-4 py-2 text-xs text-brand-primary hover:text-white transition-colors border border-brand-primary/20 rounded-lg">查看详细商户报表</button>
                 </div>
                 
-                <div className="glass-card p-6">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <Users className="text-brand-primary" size={20} /> 商户往来快览 (点击展开)
+                <div className="glass-card p-4 md:p-6">
+                  <h3 className="text-base md:text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Users className="text-brand-primary" size={18} /> 商户往来快览 (点击展开)
                   </h3>
                   <div className="space-y-3">
-                    {merchantSummaries.slice(0, 6).map((merchant, idx) => (
+                    {merchantSummaries.slice(0, 6).map((item, idx) => (
                       <ExpandableMerchantRow 
                         key={idx} 
-                        merchant={merchant} 
+                        merchant={item} 
                         transactions={transactions}
-                        onQuickPay={openPayModal}
                       />
                     ))}
-                    {merchantSummaries.length === 0 && <p className="text-center text-slate-500 py-4">暂无商户记录</p>}
+                    {merchantSummaries.length === 0 && <p className="text-center text-slate-500 py-4 text-sm">暂无商户记录</p>}
                   </div>
                 </div>
               </div>
@@ -382,9 +395,9 @@ function App() {
 
           {activeTab === 'merchants' && (
             <>
-              <header className="mb-10">
-                <h1 className="text-3xl font-bold">商户中心</h1>
-                <p className="text-slate-400 mt-1">管理商家订货记录与进货表</p>
+              <header className="mb-6 md:mb-10">
+                <h1 className="text-2xl md:text-3xl font-bold">商户中心</h1>
+                <p className="text-slate-400 text-sm mt-1">管理商家订货记录与进货表</p>
               </header>
               <SalesTable data={sales} transactions={transactions} isLoading={isLoading} onEdit={openEditModal} onDelete={deleteSale} onQuickPay={openPayModal} onNewOrder={handleNewOrder} />
             </>
@@ -392,34 +405,34 @@ function App() {
 
           {activeTab === 'accounting' && (
             <>
-              <header className="mb-10">
-                <h1 className="text-3xl font-bold">收支明细</h1>
-                <p className="text-slate-400 mt-1">实时计算业务整体盈亏状况</p>
+              <header className="mb-6 md:mb-10">
+                <h1 className="text-2xl md:text-3xl font-bold">收支明细</h1>
+                <p className="text-slate-400 text-sm mt-1">实时计算业务整体盈亏状况</p>
               </header>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-10">
                 <StatCard 
-                  title="累计实收收入" 
+                  title="累计实收" 
                   value={`¥ ${totalIncome.toLocaleString()}`} 
                   icon={ArrowUp} 
                   colorClass="emerald-400" 
-                  subValue="所有进账总和"
                 />
                 <StatCard 
-                  title="累计实出支出" 
+                  title="累计实出" 
                   value={`¥ ${totalExpense.toLocaleString()}`} 
                   icon={ArrowDown} 
                   colorClass="rose-400" 
-                  subValue="所有开销总和"
                 />
-                <StatCard 
-                  title="阶段盈亏净额" 
-                  value={`¥ ${netProfit.toLocaleString()}`} 
-                  isHighlight={true}
-                  icon={netProfit >= 0 ? TrendingUp : TrendingDown} 
-                  colorClass={netProfit >= 0 ? "emerald-400" : "rose-400"} 
-                  subValue={netProfit >= 0 ? `盈利：+${profitRate.toFixed(1)}%` : `亏损：${profitRate.toFixed(1)}%`}
-                />
+                <div className="col-span-2 md:col-span-1">
+                  <StatCard 
+                    title="盈亏净额" 
+                    value={`¥ ${netProfit.toLocaleString()}`} 
+                    isHighlight={true}
+                    icon={netProfit >= 0 ? TrendingUp : TrendingDown} 
+                    colorClass={netProfit >= 0 ? "emerald-400" : "rose-400"} 
+                    subValue={netProfit >= 0 ? `盈利：+${profitRate.toFixed(1)}%` : `亏损：${profitRate.toFixed(1)}%`}
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-10">
@@ -433,13 +446,13 @@ function App() {
                   </p>
                   <p className="text-[10px] text-slate-500 mt-2 italic">基于实到现金流计算</p>
                 </div>
-                <div className="lg:col-span-3 glass-card p-6">
+                <div className="lg:col-span-3 glass-card p-4 md:p-6">
                    <div className="flex items-center gap-2 mb-6 text-white font-bold">
                      <PieChart size={18} className="text-brand-primary" /> 资金概览分析
                    </div>
                    <div className="space-y-6">
                       <div className="space-y-2">
-                        <div className="flex justify-between text-xs mb-1">
+                        <div className="flex justify-between text-[10px] md:text-xs mb-1">
                           <span className="text-slate-400">收入 vs 支出 (平衡度)</span>
                           <span className="text-white font-bold">{(totalIncome / (totalIncome + totalExpense || 1) * 100).toFixed(1)}% / {(totalExpense / (totalIncome + totalExpense || 1) * 100).toFixed(1)}%</span>
                         </div>
@@ -448,14 +461,14 @@ function App() {
                           <div className="h-full bg-rose-400 shadow-lg shadow-rose-400/20" style={{width: `${(totalExpense / (totalIncome + totalExpense || 1) * 100)}%`}} />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 text-[11px]">
+                      <div className="grid grid-cols-2 gap-4 text-[10px] md:text-[11px]">
                          <div className="p-3 rounded-xl bg-white/5 border border-white/5">
                             <p className="text-slate-500 mb-1">未收欠款 (潜在盈利)</p>
-                            <p className="text-amber-400 font-bold text-lg">¥ {totalDebt.toLocaleString()}</p>
+                            <p className="text-amber-400 font-bold text-base md:text-lg">¥ {totalDebt.toLocaleString()}</p>
                          </div>
                          <div className="p-3 rounded-xl bg-white/5 border border-white/5">
                             <p className="text-slate-500 mb-1">预估最终利润</p>
-                            <p className="text-emerald-400 font-bold text-lg">¥ {(netProfit + totalDebt).toLocaleString()}</p>
+                            <p className="text-emerald-400 font-bold text-base md:text-lg">¥ {(netProfit + totalDebt).toLocaleString()}</p>
                          </div>
                       </div>
                    </div>
@@ -468,9 +481,9 @@ function App() {
 
           {(activeTab === 'fuel' || activeTab === 'stoves' || activeTab === 'history') && (
              <>
-               <header className="mb-10 text-white">
-                 <h1 className="text-3xl font-bold">{menuItems.find(i => i.id === activeTab)?.label}</h1>
-                 <p className="text-slate-400 mt-1">管理相关明细</p>
+               <header className="mb-6 md:mb-10 text-white">
+                 <h1 className="text-2xl md:text-3xl font-bold">{menuItems.find(i => i.id === activeTab)?.label}</h1>
+                 <p className="text-slate-400 text-sm mt-1">管理相关明细</p>
                </header>
                <DataTable data={transactions} title="记录列表" isLoading={isLoading} filterType={activeTab === 'fuel' ? '燃油采购' : activeTab === 'stoves' ? '设备采购' : undefined} onEdit={openEditModal} onDelete={deleteTransaction} />
              </>
@@ -479,10 +492,11 @@ function App() {
       </main>
 
       <button 
-        className="fixed bottom-10 right-10 btn-primary px-8 py-4 rounded-full shadow-2xl shadow-brand-primary/40 z-50 group"
+        className="fixed bottom-20 md:bottom-10 right-6 md:right-10 btn-primary p-4 md:px-8 md:py-4 rounded-full shadow-2xl shadow-brand-primary/40 z-50 group"
         onClick={() => { setPrefillData(null); setEditData(null); setIsModalOpen(true); }}
       >
-        <PlusCircle size={24} className="group-hover:rotate-90 transition-transform duration-300" /> <span className="text-lg">新增记录</span>
+        <PlusCircle size={24} className="group-hover:rotate-90 transition-transform duration-300" /> 
+        <span className="hidden md:inline text-lg ml-2">新增记录</span>
       </button>
 
       <RecordModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditData(null); setPrefillData(null); }} onAddTransaction={addTransaction} onAddSale={addSale} onUpdateTransaction={updateTransaction} onUpdateSale={updateSale} isSubmitting={isSubmitting} editData={editData} prefillData={prefillData} />

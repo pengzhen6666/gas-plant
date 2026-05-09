@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Users, ChevronUp, ChevronDown, Package, ArrowRight } from 'lucide-react';
 import type { Transaction, MerchantSummary } from '../../types/index';
 
-export const ExpandableMerchantRow = ({ merchant, transactions, onQuickPay }: { merchant: MerchantSummary, transactions: Transaction[], onQuickPay: (sale: any) => void }) => {
+export const ExpandableMerchantRow = ({ merchant, transactions }: { merchant: MerchantSummary, transactions: Transaction[] }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Find recent transactions for this merchant name
@@ -22,9 +22,9 @@ export const ExpandableMerchantRow = ({ merchant, transactions, onQuickPay }: { 
           <div className={`p-2 rounded-lg ${merchant.total_debt > 0 ? 'bg-rose-400/10 text-rose-400' : 'bg-emerald-400/10 text-emerald-400'}`}>
             <Users size={18} />
           </div>
-          <div>
-            <p className="font-bold text-white">{merchant.customer_name}</p>
-            <p className="text-[10px] text-slate-500">{merchant.phone || '无电话'}</p>
+          <div className="min-w-0">
+            <p className="font-bold text-white truncate">{merchant.customer_name}</p>
+            <p className="text-[10px] text-slate-500 truncate">{merchant.phone || '无电话'}</p>
             {merchant.assigned_equipment && (
               <p className="text-[10px] text-brand-primary flex items-center gap-1 mt-0.5">
                 <Package size={8} /> {merchant.assigned_equipment}
@@ -32,11 +32,18 @@ export const ExpandableMerchantRow = ({ merchant, transactions, onQuickPay }: { 
             )}
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4 shrink-0">
           <div className="text-right">
-            <p className={`font-bold ${merchant.total_debt > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-              {merchant.total_debt > 0 ? `欠 ¥${merchant.total_debt.toLocaleString()}` : '已结清'}
-            </p>
+            <div className={`font-bold whitespace-nowrap ${merchant.total_debt > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+              {merchant.total_debt > 0 ? (
+                <div className="flex items-center gap-1 justify-end">
+                  <span className="text-[10px] font-medium opacity-80">欠</span>
+                  <span className="text-base md:text-lg">¥{merchant.total_debt.toLocaleString()}</span>
+                </div>
+              ) : (
+                <span className="text-sm">已结清</span>
+              )}
+            </div>
             <p className="text-[10px] text-slate-500">累计用油: {merchant.total_quantity}kg</p>
           </div>
           {isExpanded ? <ChevronUp size={16} className="text-slate-500" /> : <ChevronDown size={16} className="text-slate-500" />}

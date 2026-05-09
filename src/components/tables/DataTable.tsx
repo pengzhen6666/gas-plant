@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Search, Loader2, ArrowUpRight, ArrowDownRight, Edit2, Trash2 } from 'lucide-react';
 import { formatQty } from '../../utils/index';
 
@@ -114,7 +114,9 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
       )}
 
       {isLoading && <div className="absolute inset-0 flex items-center justify-center bg-bg-primary/50 z-10"><Loader2 className="animate-spin text-brand-primary" /></div>}
-      <div className="overflow-x-auto">
+      
+      {/* Desktop Table */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-white">
           <thead className="text-slate-400 text-sm border-b border-white/5">
             <tr>
@@ -161,6 +163,51 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-4">
+        {filteredData.map((item: any) => (
+          <div key={item.id} className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-3">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-2">
+                {item.type === '收入' ? <ArrowUpRight size={16} className="text-emerald-400" /> : <ArrowDownRight size={16} className="text-rose-400" />}
+                <div>
+                  <div className="text-sm font-bold text-white">{item.title}</div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">{item.date}</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-base font-black text-white">¥ {Number(item.amount).toLocaleString()}</div>
+                <div className="text-[10px] text-slate-500">{formatQty(item.quantity)}</div>
+              </div>
+            </div>
+            
+            {item.category && (
+              <span className="inline-block px-1.5 py-0.5 bg-brand-primary/10 text-brand-primary text-[10px] rounded border border-brand-primary/20">
+                {item.category}
+              </span>
+            )}
+            
+            {item.notes && (
+              <div className="text-xs text-slate-500 bg-black/20 p-2 rounded-lg border border-white/5">
+                {item.notes}
+              </div>
+            )}
+            
+            <div className="flex justify-end gap-4 pt-2 border-t border-white/5">
+              <button onClick={() => onEdit(item)} className="text-xs text-slate-400 flex items-center gap-1 hover:text-brand-primary">
+                <Edit2 size={14} /> 编辑
+              </button>
+              <button onClick={() => onDelete(item.id)} className="text-xs text-slate-400 flex items-center gap-1 hover:text-rose-400">
+                <Trash2 size={14} /> 删除
+              </button>
+            </div>
+          </div>
+        ))}
+        {filteredData.length === 0 && (
+          <div className="py-12 text-center text-slate-600 italic text-sm">暂无进货记录</div>
+        )}
       </div>
     </div>
   );
