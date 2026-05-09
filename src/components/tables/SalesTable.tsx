@@ -75,6 +75,9 @@ export const SalesTable = ({ data, transactions, equipmentCatalog, isLoading, on
     return Object.values(statsMap).sort((a, b) => b.total_debt - a.total_debt);
   }, [filteredData, equipmentCatalog]);
 
+  const totalAssetValue = useMemo(() => merchantStats.reduce((sum, s) => sum + (s.total_asset_value || 0), 0), [merchantStats]);
+  const totalSystemDebt = useMemo(() => merchantStats.reduce((sum, s) => sum + s.total_debt, 0), [merchantStats]);
+
   return (
     <div className="space-y-6">
        <div className="glass-card p-6">
@@ -104,6 +107,25 @@ export const SalesTable = ({ data, transactions, equipmentCatalog, isLoading, on
           <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full bg-bg-secondary border border-white/10 rounded-xl px-4 py-2 text-sm outline-none focus:border-brand-primary transition-colors text-white" />
           <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full bg-bg-secondary border border-white/10 rounded-xl px-4 py-2 text-sm outline-none focus:border-brand-primary transition-colors text-white" />
         </div>
+
+        {view === 'stats' && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+            <div className="bg-brand-primary/5 border border-brand-primary/10 rounded-2xl p-4">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-[10px] text-brand-primary font-bold uppercase tracking-wider">系统总资产 (设备)</span>
+                <Package size={14} className="text-brand-primary" />
+              </div>
+              <div className="text-xl font-black text-white">¥{totalAssetValue.toLocaleString()}</div>
+            </div>
+            <div className="bg-rose-400/5 border border-rose-400/10 rounded-2xl p-4">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-[10px] text-rose-400 font-bold uppercase tracking-wider">全系统总欠款</span>
+                <Wallet size={14} className="text-rose-400" />
+              </div>
+              <div className="text-xl font-black text-white">¥{totalSystemDebt.toLocaleString()}</div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="glass-card p-4 lg:p-8 overflow-hidden relative min-h-[400px]">
@@ -253,6 +275,7 @@ export const SalesTable = ({ data, transactions, equipmentCatalog, isLoading, on
                     <th className="pb-4 px-2 text-right">累计订货总量</th>
                     <th className="pb-4 px-2 text-right">已收总计</th>
                     <th className="pb-4 px-2 text-right">累计总欠款</th>
+                    <th className="pb-4 px-2 text-right text-brand-primary">资产价值</th>
                     <th className="pb-4 px-2 text-center">还款进度</th>
                     <th className="pb-4 px-4 text-right">操作</th>
                   </tr>

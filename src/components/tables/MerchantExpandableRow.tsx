@@ -131,6 +131,9 @@ export const MerchantExpandableRow = ({ stat, sales, transactions, onNewOrder }:
           </span>
           <div className="md:hidden text-[10px] text-slate-500 mt-0.5">{stat.total_quantity}kg</div>
         </td>
+        <td className="hidden md:table-cell py-5 px-2 text-right font-bold text-brand-primary">
+          ¥ {stat.total_asset_value?.toLocaleString() || 0}
+        </td>
         <td className="hidden md:table-cell py-5 px-2 text-center min-w-[120px]">
           <div className="flex flex-col items-center gap-1 px-4">
             <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
