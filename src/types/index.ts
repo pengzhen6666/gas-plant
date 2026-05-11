@@ -40,3 +40,24 @@ export interface MerchantSummary {
   assigned_equipment?: string;
   total_asset_value?: number;
 }
+
+export interface FuelQuote {
+  id: string;
+  date: string;
+  factory_price: number;
+  density: number;
+  ton_barrel_price: number;
+  total_cost?: number;
+  total_qty?: number;
+  batch_unit?: 'ton' | 'kg' | 'L';
+  shipping_fee?: number;
+  packaging_fee?: number;
+  selling_price?: number;
+  unit_type?: 'kg' | 'L' | 'jin';
+  barrel_vol?: number;
+  notes?: string;
+  created_at?: string;
+}
+
+
+

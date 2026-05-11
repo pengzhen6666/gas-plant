@@ -19,7 +19,8 @@ import {
   Lock,
   ArrowUp,
   ArrowDown,
-  Package
+  Package,
+  Calculator
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { LoginModal } from './components/modals/LoginModal';
@@ -38,6 +39,8 @@ import { DataTable } from './components/tables/DataTable';
 import { SalesTable } from './components/tables/SalesTable';
 import { ExpandableMerchantRow } from './components/tables/ExpandableMerchantRow';
 import { EquipmentCatalog } from './components/tables/EquipmentCatalog';
+import { FuelCalculator } from './components/common/FuelCalculator';
+
 
 interface EquipmentType {
   id: string;
@@ -314,7 +317,9 @@ function App() {
     { id: 'fuel', label: '燃油进货', icon: Fuel },
     { id: 'stoves', label: '设备采购', icon: FlameKindling },
     { id: 'history', label: '全部历史', icon: History },
+    { id: 'calculator', label: '价格换算', icon: Calculator },
   ];
+
 
   const totalIncome = useMemo(() => transactions.filter(t => t.type === '收入').reduce((sum, t) => sum + Number(t.amount), 0), [transactions]);
   const totalExpense = useMemo(() => transactions.filter(t => t.type !== '收入').reduce((sum, t) => sum + Number(t.amount), 0), [transactions]);
@@ -679,8 +684,18 @@ function App() {
                 />
              </>
           )}
+          {activeTab === 'calculator' && (
+            <div className="animate-slide-up">
+              <header className="mb-10">
+                <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">价格换算器</h1>
+                <p className="text-slate-400 text-sm mt-2 font-medium">快速实现公斤/斤与升的单位换算，精准把控经营利润</p>
+              </header>
+              <FuelCalculator />
+            </div>
+          )}
         </div>
       </main>
+
 
       {/* Floating Action Button - Optimized for Mobile */}
       <button 
