@@ -518,6 +518,12 @@ export const FuelCalculator: React.FC = () => {
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-700 font-black">L</span>
                         </div>
+                        <button 
+                          onClick={applyDensityHelper}
+                          className="px-3 py-2 bg-emerald-400 text-black text-[10px] font-black rounded-xl hover:bg-emerald-300 transition-all active:scale-95 shadow-lg shadow-emerald-400/20"
+                        >
+                          应用
+                        </button>
                       </div>
                     </div>
 
