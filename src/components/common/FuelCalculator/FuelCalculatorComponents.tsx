@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { ArrowRightLeft } from 'lucide-react';
 
 export const DetailInput = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => (

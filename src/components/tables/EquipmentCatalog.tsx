@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Package, Plus, Trash2, Edit2, Save, X, DollarSign, Loader2, Check } from 'lucide-react';
+import { Package, Plus, Trash2, Edit2, X, DollarSign, Loader2, Check } from 'lucide-react';
 import { 
   CATEGORIES, 
   STOVE_TYPES, 

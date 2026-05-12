@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import type { RecordType, SettlementType } from '../../types/index';
 import { jinToKg } from '../../utils/index';
-import { parseEquipName } from '../../config/equipment';
+
 
 export const RecordModal = ({ isOpen, onClose, onAddTransaction, onAddSale, onUpdateTransaction, onUpdateSale, isSubmitting, editData, prefillData, equipmentCatalog }: any) => {
   const [inputUnit, setInputUnit] = useState<'kg' | '斤'>('kg');

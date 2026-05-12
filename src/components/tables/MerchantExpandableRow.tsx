@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ChevronUp, ChevronDown, Phone as PhoneIcon, Package, History as HistoryIcon, ShoppingCart } from 'lucide-react';
+import { ChevronUp, ChevronDown, Phone as PhoneIcon, History as HistoryIcon, ShoppingCart } from 'lucide-react';
 import { kgToJin } from '../../utils/index';
 import type { Sale, Transaction, MerchantSummary, SettlementType } from '../../types/index';
 
