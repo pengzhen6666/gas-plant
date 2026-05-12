@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import type { RecordType, SettlementType } from '../../types/index';
 import { jinToKg } from '../../utils/index';
+import { parseEquipName } from '../../config/equipment';
 
 export const RecordModal = ({ isOpen, onClose, onAddTransaction, onAddSale, onUpdateTransaction, onUpdateSale, isSubmitting, editData, prefillData, equipmentCatalog }: any) => {
   const [inputUnit, setInputUnit] = useState<'kg' | '斤'>('kg');
@@ -209,6 +210,12 @@ export const RecordModal = ({ isOpen, onClose, onAddTransaction, onAddSale, onUp
     }
   };
 
+  const parseEquipName = (fullName: string) => {
+    const parts = fullName.split('::');
+    if (parts.length === 3) return { cat: parts[0], mfr: parts[1], model: parts[2] };
+    return { cat: '', mfr: '', model: fullName };
+  };
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[1000] p-4">
       <div className="glass-card w-full max-w-lg p-8 animate-in fade-in slide-in-from-bottom-4 duration-300 max-h-[95vh] overflow-y-auto">
@@ -381,11 +388,38 @@ export const RecordModal = ({ isOpen, onClose, onAddTransaction, onAddSale, onUp
           ) : (
             <>
               <div className="space-y-2">
-                <label className="text-sm text-slate-400">摘要内容</label>
+                <label className="text-sm text-slate-400">摘要内容 (型号/名称)</label>
+                
+                {formData.type === '设备采购' && equipmentCatalog && equipmentCatalog.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2 p-3 bg-white/5 rounded-xl border border-white/5">
+                    <p className="w-full text-[10px] text-brand-primary font-bold mb-1 uppercase tracking-wider">从资产库点选型号:</p>
+                    {equipmentCatalog.map((item: any) => {
+                      const { mfr, model } = parseEquipName(item.name);
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setFormData({
+                              ...formData, 
+                              title: `${mfr} ${model}`,
+                              unit_price: item.price.toString(),
+                              category: item.name.split('::')[0]
+                            });
+                          }}
+                          className="px-2 py-1 bg-brand-primary/10 text-brand-primary text-[10px] font-bold rounded border border-brand-primary/20 hover:bg-brand-primary hover:text-white transition-all"
+                        >
+                          {mfr} {model} (¥{item.price})
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
                 <input 
                   type="text" 
                   className="w-full bg-bg-secondary border border-white/10 rounded-xl p-3 outline-none focus:border-brand-primary transition-colors text-white"
-                  placeholder="输入交易说明..."
+                  placeholder="输入或点击上方型号..."
                   value={formData.title}
                   onChange={e => setFormData({...formData, title: e.target.value})}
                   required

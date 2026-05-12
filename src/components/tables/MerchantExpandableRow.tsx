@@ -3,6 +3,27 @@ import { ChevronUp, ChevronDown, Phone as PhoneIcon, Package, History as History
 import { kgToJin } from '../../utils/index';
 import type { Sale, Transaction, MerchantSummary, SettlementType } from '../../types/index';
 
+const formatEquip = (equipStr: string) => {
+  if (!equipStr) return null;
+  return equipStr.split(/[,，]/).map((item, i) => {
+    const parts = item.trim().split('::');
+    if (parts.length === 3) {
+      return (
+        <div key={i} className="flex items-center gap-1.5 whitespace-nowrap">
+          <span className="px-1 py-0.5 bg-brand-primary/10 text-brand-primary text-[7px] font-black rounded border border-brand-primary/20 uppercase tracking-tighter">
+            {parts[0]}
+          </span>
+          <span className="text-white font-bold text-[9px]">{parts[1]}</span>
+          <span className="text-slate-400 text-[9px] truncate max-w-[150px]">
+            {parts[2]}
+          </span>
+        </div>
+      );
+    }
+    return <div key={i} className="text-slate-400 text-[9px]">{item.trim()}</div>;
+  });
+};
+
 export const MerchantExpandableRow = ({ stat, sales, transactions, onNewOrder }: { stat: MerchantSummary, sales: Sale[], transactions: Transaction[], onNewOrder: (name: string, phone: string, type?: SettlementType) => void }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = stat.total_amount > 0 ? (stat.total_paid / stat.total_amount) * 100 : 0;
@@ -110,9 +131,8 @@ export const MerchantExpandableRow = ({ stat, sales, transactions, onNewOrder }:
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400 mt-1">
                 <div className="flex items-center gap-1"><PhoneIcon size={10} /> {stat.phone || '无电话'}</div>
                 {stat.assigned_equipment && (
-                  <div className="flex items-center gap-1 px-2 py-0.5 bg-brand-primary/10 text-brand-primary rounded border border-brand-primary/20 scale-90 origin-left">
-                    <Package size={10} /> 
-                    <span className="font-bold">设备: {stat.assigned_equipment}</span>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    {formatEquip(stat.assigned_equipment)}
                   </div>
                 )}
               </div>

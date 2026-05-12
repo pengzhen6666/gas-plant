@@ -223,7 +223,14 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
                   {item.type === '收入' || item.type === '销售录入' ? <ArrowUpRight size={14} className="text-emerald-400" /> : <ArrowDownRight size={14} className="text-rose-400" />}
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{item.title}</span>
+                      <span className="font-medium">
+                        {item.type === '设备采购' && item.title.includes('/') ? (
+                          <div className="flex flex-col">
+                            <span className="text-white">{item.title.split(' ')[0]}</span>
+                            <span className="text-slate-400 text-[10px]">{item.title.split(' ').slice(1).join(' ')}</span>
+                          </div>
+                        ) : item.title}
+                      </span>
                       {item.source === 'sale' && (
                         <span className="px-1.5 py-0.5 bg-blue-400/10 text-blue-400 text-[9px] rounded-full border border-blue-400/20 font-bold uppercase tracking-wider">
                           销售单

@@ -79,6 +79,7 @@ function App() {
         // Fallback to demo data or empty
         return;
       }
+      console.log('成功读取资产库数据:', data);
       if (data) setEquipmentCatalog(data);
     } catch (e) { console.error(e); }
   };
@@ -88,7 +89,10 @@ function App() {
       const { data, error } = await supabase.from('equipment_catalog').insert([{ name, price }]).select();
       if (error) throw error;
       if (data) setEquipmentCatalog([...equipmentCatalog, data[0]].sort((a, b) => a.name.localeCompare(b.name)));
-    } catch (e) { alert('添加失败，请检查数据库'); }
+    } catch (e: any) { 
+      console.error(e);
+      alert(`添加失败: ${e.message || '未知错误'}。请确保已在 Supabase 中创建 equipment_catalog 表。`); 
+    }
   };
 
   const updateCatalogItem = async (id: string, name: string, price: number) => {
@@ -447,9 +451,9 @@ function App() {
 
       {/* Main Content Area - Expanded to fill screen width */}
       <main className="flex-1 p-4 md:p-10 md:ml-72 w-full max-w-[1800px]">
-        <div className="animate-slide-up">
+        <div>
           {activeTab === 'dashboard' && (
-            <>
+            <div className="animate-slide-up">
               <header className="mb-4 md:mb-8">
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-[9px] font-bold uppercase tracking-widest mb-2">
                   <Activity size={10} /> 实时数据看板
@@ -527,11 +531,11 @@ function App() {
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {activeTab === 'merchants' && (
-            <>
+            <div className="animate-slide-up">
               <header className="mb-10">
                 <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">商户中心</h1>
                 <p className="text-slate-400 text-sm mt-2 font-medium">管理商家订货记录、设备资产与进货档案</p>
@@ -546,11 +550,11 @@ function App() {
                 onQuickPay={(sale) => requireAuth(() => openPayModal(sale))} 
                 onNewOrder={(name, phone, type) => requireAuth(() => handleNewOrder(name, phone, type))} 
               />
-            </>
+            </div>
           )}
 
           {activeTab === 'accounting' && (
-            <>
+            <div className="animate-slide-up">
               <header className="mb-10">
                 <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">收支明细</h1>
                 <p className="text-slate-400 text-sm mt-2 font-medium">业务全景盈亏实时计算与资金流监控</p>
@@ -622,7 +626,7 @@ function App() {
                 onEdit={(data: any) => requireAuth(() => openEditModal(data))} 
                 onDelete={(id: any) => requireAuth(() => deleteTransaction(id))} 
               />
-            </>
+            </div>
           )}
 
           {activeTab === 'equipment_prices' && (
@@ -641,7 +645,7 @@ function App() {
           )}
 
           {activeTab === 'history' && (
-            <>
+            <div className="animate-slide-up">
               <header className="mb-10">
                 <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">全业务档案</h1>
                 <p className="text-slate-400 text-sm mt-2 font-medium">所有财务往来与订单记录的统一时间轴</p>
@@ -665,11 +669,11 @@ function App() {
                   }
                 }}
               />
-            </>
+            </div>
           )}
 
           {(activeTab === 'fuel' || activeTab === 'stoves') && (
-             <>
+             <div className="animate-slide-up">
                <header className="mb-10">
                  <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">{menuItems.find(i => i.id === activeTab)?.label}</h1>
                  <p className="text-slate-400 text-sm mt-2 font-medium">专项采购数据分析与记录管理</p>
@@ -682,14 +686,10 @@ function App() {
                   onEdit={(data: any) => requireAuth(() => openEditModal(data))} 
                   onDelete={(id: any) => requireAuth(() => deleteTransaction(id))} 
                 />
-             </>
+             </div>
           )}
           {activeTab === 'calculator' && (
-            <div className="animate-slide-up">
-              <header className="mb-10">
-                <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">价格换算器</h1>
-                <p className="text-slate-400 text-sm mt-2 font-medium">快速实现公斤/斤与升的单位换算，精准把控经营利润</p>
-              </header>
+            <div className="h-full">
               <FuelCalculator />
             </div>
           )}

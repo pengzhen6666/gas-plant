@@ -4,6 +4,29 @@ import { MerchantExpandableRow } from './MerchantExpandableRow';
 import { kgToJin } from '../../utils/index';
 import type { Sale, Transaction, MerchantSummary, SettlementType } from '../../types/index';
 
+const formatEquip = (equipStr: string) => {
+  if (!equipStr) return null;
+  return equipStr.split(/[,，]/).map((item, i) => {
+    const parts = item.trim().split('::');
+    if (parts.length === 3) {
+      return (
+        <div key={i} className="flex flex-col gap-0.5 mb-1 last:mb-0">
+          <div className="flex items-center gap-1.5">
+            <span className="px-1 py-0.5 bg-brand-primary/10 text-brand-primary text-[8px] font-black rounded border border-brand-primary/20 uppercase tracking-tighter">
+              {parts[0]}
+            </span>
+            <span className="text-white font-bold text-[10px]">{parts[1]}</span>
+          </div>
+          <div className="text-slate-400 text-[10px] pl-1 border-l border-white/10 ml-2">
+            {parts[2]}
+          </div>
+        </div>
+      );
+    }
+    return <div key={i} className="text-slate-400 text-[10px]">{item.trim()}</div>;
+  });
+};
+
 export const SalesTable = ({ data, transactions, equipmentCatalog, isLoading, onEdit, onDelete, onQuickPay, onNewOrder }: { data: Sale[], transactions: Transaction[], equipmentCatalog: any[], isLoading: boolean, onEdit: (s: Sale) => void, onDelete: (id: string) => void, onQuickPay: (s: Sale) => void, onNewOrder: (name: string, phone: string, settlement_type?: SettlementType) => void }) => {
   const [view, setView] = useState<'list' | 'stats'>('stats'); 
   const [searchTerm, setSearchTerm] = useState('');
@@ -172,8 +195,8 @@ export const SalesTable = ({ data, transactions, equipmentCatalog, isLoading, on
                         </td>
                         <td className="py-4 px-2">
                           {sale.assigned_equipment ? (
-                            <div className="flex items-center gap-1 px-2 py-1 bg-brand-primary/10 text-brand-primary text-[10px] rounded border border-brand-primary/20 w-fit">
-                              <Package size={10} /> {sale.assigned_equipment}
+                            <div className="space-y-1">
+                              {formatEquip(sale.assigned_equipment)}
                             </div>
                           ) : (
                             <span className="text-slate-600 text-[10px]">-</span>
@@ -247,8 +270,13 @@ export const SalesTable = ({ data, transactions, equipmentCatalog, isLoading, on
                       </div>
 
                       {sale.assigned_equipment && (
-                        <div className="flex items-center gap-2 px-3 py-2 bg-brand-primary/5 rounded-xl border border-brand-primary/10 text-[10px] text-brand-primary font-bold">
-                           <Package size={12} /> 配备设备: {sale.assigned_equipment}
+                        <div className="bg-white/5 p-3 rounded-2xl border border-white/5">
+                           <div className="flex items-center gap-2 mb-2 text-brand-primary text-[9px] font-black uppercase tracking-widest">
+                              <Package size={12} /> 配备设备清单
+                           </div>
+                           <div className="space-y-2">
+                              {formatEquip(sale.assigned_equipment)}
+                           </div>
                         </div>
                       )}
 
