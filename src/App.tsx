@@ -42,11 +42,7 @@ import { EquipmentCatalog } from './components/tables/EquipmentCatalog';
 import { FuelCalculator } from './components/common/FuelCalculator';
 
 
-interface EquipmentType {
-  id: string;
-  name: string;
-  price: number;
-}
+
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');

@@ -1,4 +1,3 @@
-import React from 'react';
 import { STOVE_DIMENSIONS, STOVE_BURNERS, STOVE_BASINS } from '../../../config/equipment';
 import type { FormattedPresets } from './types';
 

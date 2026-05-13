@@ -1,8 +1,7 @@
-import React from 'react';
 import { Plus, Check, X } from 'lucide-react';
 import { CATEGORIES, EQUIPMENT_MODELS, STOVE_MANUFACTURERS } from '../../../config/equipment';
 import { StoveSpecForm } from './StoveSpecForm';
-import type { EquipmentType, FormattedPresets, PresetType } from './types';
+import type { FormattedPresets } from './types';
 
 interface AddEquipmentRowProps {
   isAdding: boolean;

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Settings2, X } from 'lucide-react';
 import { CATEGORIES } from '../../../config/equipment';
 import type { FormattedPresets } from './types';

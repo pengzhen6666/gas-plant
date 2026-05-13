@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from 'react';
+import { useState, Fragment } from 'react';
 import { Package, Plus, DollarSign, Settings2 } from 'lucide-react';
 import { 
   CATEGORIES, 
@@ -68,7 +68,7 @@ export const EquipmentCatalog = ({
 
   // Helper to format presets from DB structure
   const formattedPresets: FormattedPresets = {
-    models: presets.filter(p => p.type === 'model').map(p => ({ category: p.category, value: p.value, id: p.id })),
+    models: presets.filter(p => p.type === 'model').map(p => ({ category: p.category || '', value: p.value, id: p.id })),
     manufacturers: presets.filter(p => p.type === 'manufacturer').map(p => ({ value: p.value, id: p.id })),
     dimensions: presets.filter(p => p.type === 'dimension').map(p => ({ value: p.value, id: p.id })),
     burners: presets.filter(p => p.type === 'burner').map(p => ({ value: p.value, id: p.id }))

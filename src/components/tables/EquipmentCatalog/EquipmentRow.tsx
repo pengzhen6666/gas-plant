@@ -1,5 +1,4 @@
-import React from 'react';
-import { Edit2, Trash2, Check, X, DollarSign } from 'lucide-react';
+import { Edit2, Trash2, Check, X } from 'lucide-react';
 import { CATEGORIES, STOVE_MANUFACTURERS, EQUIPMENT_MODELS, parseEquipName as parseName } from '../../../config/equipment';
 import { StoveSpecForm } from './StoveSpecForm';
 import type { EquipmentType, FormattedPresets } from './types';
