@@ -31,4 +31,14 @@ export const priceKgToJin = (pricePerKg: number) => {
   return pricePerKg / 2;
 };
 
-
+export const calculateTankVolume = (dimensionStr: string) => {
+  if (!dimensionStr || !dimensionStr.includes('*')) return null;
+  const parts = dimensionStr.split('*').map(p => parseFloat(p.trim()));
+  if (parts.length === 3 && !parts.some(isNaN)) {
+    const [l, w, h] = parts;
+    // Effective height is h - 100 as per user: 500*800*800 exterior -> 500*800*700 interior
+    const volume = (l * w * (h - 100)) / 1000000;
+    return Math.round(volume);
+  }
+  return null;
+};

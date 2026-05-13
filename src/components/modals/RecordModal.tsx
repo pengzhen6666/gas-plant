@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import type { RecordType, SettlementType } from '../../types/index';
 import { jinToKg } from '../../utils/index';
+import { CATEGORIES, parseEquipName as parseName } from '../../config/equipment';
 
 
 export const RecordModal = ({ isOpen, onClose, onAddTransaction, onAddSale, onUpdateTransaction, onUpdateSale, isSubmitting, editData, prefillData, equipmentCatalog }: any) => {
   const [inputUnit, setInputUnit] = useState<'kg' | '斤'>('kg');
+  const [filterMfr, setFilterMfr] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     type: '收入' as RecordType,
     title: '',
@@ -270,38 +272,68 @@ export const RecordModal = ({ isOpen, onClose, onAddTransaction, onAddSale, onUp
                 </div>
               </div>
               <div className="space-y-3">
-                <label className="text-sm text-brand-primary font-bold">配备设备 (商户正在使用的炉灶/油箱等)</label>
+                <label className="text-sm text-brand-primary font-bold">配备设备 (点选下方厂家进行筛选)</label>
                 
-                {/* Quick Select Buttons */}
+                {/* Manufacturer Filter Tabs */}
                 {equipmentCatalog && equipmentCatalog.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {equipmentCatalog.map((item: any) => {
-                      const isSelected = formData.assigned_equipment.includes(item.name);
-                      return (
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2 pb-2 border-b border-white/5">
+                      <button
+                        type="button"
+                        onClick={() => setFilterMfr(null)}
+                        className={`px-3 py-1 rounded-full text-[10px] font-black transition-all ${
+                          !filterMfr ? 'bg-brand-primary text-white' : 'bg-white/5 text-slate-500 hover:text-slate-300'
+                        }`}
+                      >
+                        全部厂家
+                      </button>
+                      {Array.from(new Set(equipmentCatalog.map((item: any) => parseName(item.name).manufacturer))).map((mfr: any) => (
                         <button
-                          key={item.id}
+                          key={mfr}
                           type="button"
-                          onClick={() => {
-                            const current = formData.assigned_equipment;
-                            const items = current ? current.split(/[,，]/).map(i => i.trim()).filter(Boolean) : [];
-                            let next;
-                            if (items.includes(item.name)) {
-                              next = items.filter(i => i !== item.name).join(', ');
-                            } else {
-                              next = [...items, item.name].join(', ');
-                            }
-                            setFormData({...formData, assigned_equipment: next});
-                          }}
-                          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
-                            isSelected 
-                              ? 'bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20' 
-                              : 'bg-white/5 text-slate-400 border-white/10 hover:border-brand-primary/40'
+                          onClick={() => setFilterMfr(mfr)}
+                          className={`px-3 py-1 rounded-full text-[10px] font-black transition-all ${
+                            filterMfr === mfr ? 'bg-brand-primary text-white' : 'bg-white/5 text-slate-500 hover:text-slate-300'
                           }`}
                         >
-                          {item.name}
+                          {mfr}
                         </button>
-                      );
-                    })}
+                      ))}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                      {equipmentCatalog
+                        .filter((item: any) => !filterMfr || parseName(item.name).manufacturer === filterMfr)
+                        .map((item: any) => {
+                          const isSelected = formData.assigned_equipment.includes(item.name);
+                          const { manufacturer, itemName } = parseName(item.name);
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => {
+                                const current = formData.assigned_equipment;
+                                const itemsList = current ? current.split(/[,，]/).map(i => i.trim()).filter(Boolean) : [];
+                                let next;
+                                if (itemsList.includes(item.name)) {
+                                  next = itemsList.filter(i => i !== item.name).join(', ');
+                                } else {
+                                  next = [...itemsList, item.name].join(', ');
+                                }
+                                setFormData({...formData, assigned_equipment: next});
+                              }}
+                              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border flex items-center gap-2 ${
+                                isSelected 
+                                  ? 'bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20' 
+                                  : 'bg-white/5 text-slate-400 border-white/10 hover:border-brand-primary/40'
+                              }`}
+                            >
+                              {!filterMfr && <span className="opacity-40 text-[9px] font-normal">{manufacturer}</span>}
+                              {itemName}
+                            </button>
+                          );
+                        })}
+                    </div>
                   </div>
                 )}
 
@@ -435,13 +467,7 @@ export const RecordModal = ({ isOpen, onClose, onAddTransaction, onAddSale, onUp
                     onChange={e => setFormData({...formData, category: e.target.value})}
                   >
                     <option value="">-- 请选择设备种类 --</option>
-                    <option value="油箱">油箱</option>
-                    <option value="炉灶">炉灶</option>
-                    <option value="煲仔炉">煲仔炉</option>
-                    <option value="汤炉">汤炉</option>
-                    <option value="蒸柜">蒸柜</option>
-                    <option value="运费">运费</option>
-                    <option value="其他配件">其他配件</option>
+                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               )}

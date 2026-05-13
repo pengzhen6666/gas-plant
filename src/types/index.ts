@@ -56,8 +56,17 @@ export interface FuelQuote {
   unit_type?: 'kg' | 'L' | 'jin';
   barrel_vol?: number;
   notes?: string;
-  created_at?: string;
 }
 
+export interface EquipmentType {
+  id: string;
+  name: string;
+  price: number;
+}
 
-
+export interface PresetType {
+  id: string;
+  type: string;
+  value: string;
+  category?: string;
+}

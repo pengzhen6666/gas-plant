@@ -26,7 +26,7 @@ import { supabase } from './lib/supabase';
 import { LoginModal } from './components/modals/LoginModal';
 
 // --- Types ---
-import type { Transaction, Sale, MerchantSummary, SettlementType } from './types/index';
+import type { Transaction, Sale, MerchantSummary, SettlementType, EquipmentType } from './types/index';
 
 // --- Utils ---
 import { kgToJin } from './utils/index';
@@ -69,7 +69,41 @@ function App() {
     if (auth === 'true') setIsLoggedIn(true);
     fetchAllData();
     fetchCatalog();
+    fetchPresets();
   }, []);
+
+  const [equipmentPresets, setEquipmentPresets] = useState<any[]>([]);
+
+  const fetchPresets = async () => {
+    try {
+      const { data, error } = await supabase.from('equipment_presets').select('*');
+      if (error) {
+        console.warn('Equipment presets table not found:', error.message);
+        return;
+      }
+      if (data) setEquipmentPresets(data);
+    } catch (e) { console.error(e); }
+  };
+
+  const addPreset = async (type: string, value: string, category?: string) => {
+    // Prevent duplicates in state/DB
+    const exists = equipmentPresets.find(p => p.type === type && p.value === value && (type !== 'model' || p.category === category));
+    if (exists) return;
+
+    try {
+      const { data, error } = await supabase.from('equipment_presets').insert([{ type, value, category }]).select();
+      if (error) throw error;
+      if (data) setEquipmentPresets([...equipmentPresets, ...data]);
+    } catch (e) { console.error('Failed to save preset:', e); }
+  };
+
+  const deletePreset = async (id: string) => {
+    try {
+      const { error } = await supabase.from('equipment_presets').delete().eq('id', id);
+      if (error) throw error;
+      setEquipmentPresets(equipmentPresets.filter(p => p.id !== id));
+    } catch (e) { alert('删除预设失败'); }
+  };
 
   const fetchCatalog = async () => {
     try {
@@ -637,9 +671,12 @@ function App() {
               </header>
               <EquipmentCatalog 
                 catalog={equipmentCatalog}
+                presets={equipmentPresets}
                 onAdd={addCatalogItem}
                 onUpdate={updateCatalogItem}
                 onDelete={deleteCatalogItem}
+                onAddPreset={addPreset}
+                onDeletePreset={deletePreset}
               />
             </div>
           )}
