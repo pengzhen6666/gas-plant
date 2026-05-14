@@ -1,4 +1,3 @@
-import React from 'react';
 import { X, Loader2 } from 'lucide-react';
 import type { RecordType } from '../../types/index';
 

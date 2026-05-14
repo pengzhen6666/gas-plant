@@ -79,10 +79,10 @@ export const SalesEntrySection: React.FC<Props> = ({
                       type="button"
                       onClick={() => {
                         const current = formData.assigned_equipment;
-                        const itemsList = current ? current.split(/[,，]/).map(i => i.trim()).filter(Boolean) : [];
+                        const itemsList = current ? current.split(/[,，]/).map((i: string) => i.trim()).filter(Boolean) : [];
                         let next;
                         if (itemsList.includes(item.name)) {
-                          next = itemsList.filter(i => i !== item.name).join(', ');
+                          next = itemsList.filter((i: string) => i !== item.name).join(', ');
                         } else {
                           next = [...itemsList, item.name].join(', ');
                         }
