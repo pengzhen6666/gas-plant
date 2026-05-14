@@ -19,6 +19,8 @@ interface StoveSpecFormProps {
   setSpecHandle: (v: boolean) => void;
   specFlameout: boolean;
   setSpecFlameout: (v: boolean) => void;
+  deductTopSpace: boolean;
+  setDeductTopSpace: (v: boolean) => void;
   formattedPresets: FormattedPresets;
   volumeLabel?: string | null;
   isEdit?: boolean;
@@ -34,6 +36,7 @@ export const StoveSpecForm = ({
   specSilent, setSpecSilent,
   specHandle, setSpecHandle,
   specFlameout, setSpecFlameout,
+  deductTopSpace, setDeductTopSpace,
   formattedPresets,
   volumeLabel,
   isEdit = false
@@ -49,9 +52,26 @@ export const StoveSpecForm = ({
   return (
     <div className={`mt-3 space-y-3 ${isEdit ? 'p-2 bg-white/5 rounded-xl border border-white/5' : ''}`}>
       {category === '油箱' && volumeLabel && (
-        <div className="text-[10px] text-emerald-400 font-bold bg-emerald-400/5 px-3 py-1 rounded-lg inline-flex items-center gap-2 border border-emerald-400/10 animate-in slide-in-from-top-1">
-          <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-          系统自动估算容积: {volumeLabel} 升 (已扣除顶部空间)
+        <div className="flex items-center gap-4 bg-white/5 p-3 rounded-xl border border-white/10 animate-in slide-in-from-top-1">
+          <div className="text-[10px] text-emerald-400 font-bold flex items-center gap-2">
+            <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+            估算容积: <span className="text-sm px-1.5 py-0.5 bg-emerald-400 text-black rounded mx-1">{volumeLabel}</span> 升
+          </div>
+          
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input 
+              type="checkbox" 
+              checked={deductTopSpace} 
+              onChange={e => setDeductTopSpace(e.target.checked)} 
+              className="hidden" 
+            />
+            <div className={`w-3.5 h-3.5 rounded border ${deductTopSpace ? 'bg-emerald-500 border-emerald-500' : 'border-white/20'} flex items-center justify-center transition-all`}>
+              {deductTopSpace && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+            </div>
+            <span className="text-[10px] text-slate-400 font-bold group-hover:text-white transition-colors">
+              扣除顶部空间 (10cm)
+            </span>
+          </label>
         </div>
       )}
 

@@ -30,6 +30,7 @@ interface EquipmentRowProps {
   editSpecSilent: boolean; setEditSpecSilent: (v: boolean) => void;
   editSpecHandle: boolean; setEditSpecHandle: (v: boolean) => void;
   editSpecFlameout: boolean; setEditSpecFlameout: (v: boolean) => void;
+  editDeductTopSpace: boolean; setEditDeductTopSpace: (v: boolean) => void;
   
   formattedPresets: FormattedPresets;
   onStartEdit: (item: EquipmentType) => void;
@@ -48,6 +49,7 @@ export const EquipmentRow = ({
   editSpecBurner, setEditSpecBurner, editCustomSpecBurner, setEditCustomSpecBurner,
   editSpecBasin, setEditSpecBasin, editSpecSilent, setEditSpecSilent,
   editSpecHandle, setEditSpecHandle, editSpecFlameout, setEditSpecFlameout,
+  editDeductTopSpace, setEditDeductTopSpace,
   formattedPresets, onStartEdit, onSaveEdit, onCancelEdit, onDelete, isSubmitting, volumeLabel
 }: EquipmentRowProps) => {
   const isEditing = editingId === item.id;
@@ -121,6 +123,7 @@ export const EquipmentRow = ({
               specSilent={editSpecSilent} setSpecSilent={setEditSpecSilent}
               specHandle={editSpecHandle} setSpecHandle={setEditSpecHandle}
               specFlameout={editSpecFlameout} setSpecFlameout={setEditSpecFlameout}
+              deductTopSpace={editDeductTopSpace} setDeductTopSpace={setEditDeductTopSpace}
               formattedPresets={formattedPresets}
               volumeLabel={volumeLabel}
               isEdit={true}

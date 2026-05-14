@@ -48,6 +48,7 @@ export const EquipmentCatalog = ({
   const [newSpecFlameout, setNewSpecFlameout] = useState(false);
   const [customSpecDim, setCustomSpecDim] = useState('');
   const [customSpecBurner, setCustomSpecBurner] = useState('');
+  const [newDeductTopSpace, setNewDeductTopSpace] = useState(true);
 
   // EDIT states
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -65,6 +66,7 @@ export const EquipmentCatalog = ({
   const [editSpecFlameout, setEditSpecFlameout] = useState(false);
   const [editCustomSpecDim, setEditCustomSpecDim] = useState('');
   const [editCustomSpecBurner, setEditCustomSpecBurner] = useState('');
+  const [editDeductTopSpace, setEditDeductTopSpace] = useState(true);
 
   // Helper to format presets from DB structure
   const formattedPresets: FormattedPresets = {
@@ -74,7 +76,7 @@ export const EquipmentCatalog = ({
     burners: presets.filter(p => p.type === 'burner').map(p => ({ value: p.value, id: p.id }))
   };
 
-  const buildFullName = (cat: string, mfr: string, type: string, note: string, dim: string, burner: string, basin: string, silent: boolean, handle: boolean, flameout: boolean, cDim?: string, cBurner?: string) => {
+  const buildFullName = (cat: string, mfr: string, type: string, note: string, dim: string, burner: string, basin: string, silent: boolean, handle: boolean, flameout: boolean, deductTopSpace: boolean, cDim?: string, cBurner?: string) => {
     let details = [];
     if (type === '其他型号') {
       if (note) details.push(note);
@@ -94,6 +96,7 @@ export const EquipmentCatalog = ({
     if (silent) details.push('静音');
     if (handle) details.push('手柄开关');
     if (flameout) details.push('拉锅熄火');
+    if (cat === '油箱' && !deductTopSpace) details.push('满装');
     
     const itemName = details.length > 0 ? details.join('/') : '常规型号';
     return `${cat}:${mfr}:${itemName}`;
@@ -101,21 +104,26 @@ export const EquipmentCatalog = ({
 
   const parseItemNameSpecs = (itemName: string) => {
     const specs = itemName.split('/');
-    let dim = '', burner = '', basin = '', silent = false, handle = false, flameout = false, type = '', note = '';
+    let dim = '', burner = '', basin = '', silent = false, handle = false, flameout = false, type = '', note = '', deductTopSpace = true;
     
+    const customDims = formattedPresets.dimensions.map(d => d.value);
+    const customBurners = formattedPresets.burners.map(b => b.value);
+    const customModels = formattedPresets.models.map(m => m.value);
+
     specs.forEach(s => {
-      if (STOVE_DIMENSIONS.includes(s)) dim = s;
-      else if (s.endsWith('头') || s.endsWith('眼')) burner = s.replace(/[头眼]$/, '');
+      if (STOVE_DIMENSIONS.includes(s) || customDims.includes(s)) dim = s;
+      else if (s.endsWith('头') || s.endsWith('眼') || customBurners.includes(s)) burner = s.replace(/[头眼]$/, '');
       else if (s.endsWith('盆') || s.includes('#')) basin = s.replace('盆', '');
       else if (s === '静音') silent = true;
       else if (s === '手柄开关') handle = true;
       else if (s === '拉杆熄火' || s === '拉锅熄火') flameout = true;
-      else if (ALL_MODELS.includes(s)) type = s;
+      else if (s === '满装') deductTopSpace = false;
+      else if (ALL_MODELS.includes(s) || customModels.includes(s)) type = s;
       else if (!type) type = s;
       else if (!note) note = s;
     });
     
-    return { dim, burner, basin, silent, handle, flameout, type, note };
+    return { dim, burner, basin, silent, handle, flameout, type, note, deductTopSpace };
   };
 
   const handleAdd = async () => {
@@ -128,7 +136,7 @@ export const EquipmentCatalog = ({
     setIsSubmitting(true);
     try {
       const finalType = selectedType === '其他型号' ? customType : selectedType;
-      const fullName = buildFullName(newCategory, finalMfr, finalType, customNote, newSpecDim, newSpecBurner, newSpecBasin, newSpecSilent, newSpecHandle, newSpecFlameout, customSpecDim, customSpecBurner);
+      const fullName = buildFullName(newCategory, finalMfr, finalType, customNote, newSpecDim, newSpecBurner, newSpecBasin, newSpecSilent, newSpecHandle, newSpecFlameout, newDeductTopSpace, customSpecDim, customSpecBurner);
       
       if (selectedType === '其他型号' && customType) onAddPreset('model', customType, newCategory);
       if (newManufacturer === '其他厂家' && customManufacturer) onAddPreset('manufacturer', customManufacturer);
@@ -140,7 +148,7 @@ export const EquipmentCatalog = ({
       setSelectedType(''); setCustomType(''); setCustomNote(''); setNewPrice(''); setNewManufacturer('');
       setCustomManufacturer(''); setNewSpecDim(''); setNewSpecBurner(''); setCustomSpecDim('');
       setCustomSpecBurner(''); setNewSpecBasin(''); setNewSpecSilent(false); setNewSpecHandle(false);
-      setNewSpecFlameout(false); setIsAdding(false);
+      setNewSpecFlameout(false); setNewDeductTopSpace(true); setIsAdding(false);
     } catch (e) { console.error(e); } finally { setIsSubmitting(false); }
   };
 
@@ -153,7 +161,10 @@ export const EquipmentCatalog = ({
     setEditManufacturer(manufacturer);
     setEditPrice(item.price.toString());
     
-    if (STOVE_DIMENSIONS.includes(specs.dim)) {
+    const customDims = formattedPresets.dimensions.map(d => d.value);
+    const customBurners = formattedPresets.burners.map(b => b.value);
+
+    if (STOVE_DIMENSIONS.includes(specs.dim) || customDims.includes(specs.dim)) {
       setEditSpecDim(specs.dim); setEditCustomSpecDim('');
     } else if (specs.dim) {
       setEditSpecDim('其他尺寸'); setEditCustomSpecDim(specs.dim);
@@ -161,7 +172,7 @@ export const EquipmentCatalog = ({
       setEditSpecDim(''); setEditCustomSpecDim('');
     }
 
-    if (STOVE_BURNERS.includes(specs.burner)) {
+    if (STOVE_BURNERS.includes(specs.burner) || customBurners.includes(specs.burner)) {
       setEditSpecBurner(specs.burner); setEditCustomSpecBurner('');
     } else if (specs.burner) {
       setEditSpecBurner('其他炉头'); setEditCustomSpecBurner(specs.burner);
@@ -171,6 +182,7 @@ export const EquipmentCatalog = ({
     
     setEditSpecBasin(specs.basin); setEditSpecSilent(specs.silent);
     setEditSpecHandle(specs.handle); setEditSpecFlameout(specs.flameout);
+    setEditDeductTopSpace(specs.deductTopSpace);
     
     if (ALL_MODELS.includes(specs.type)) {
       setEditType(specs.type); setEditCustomType('');
@@ -186,7 +198,7 @@ export const EquipmentCatalog = ({
     setIsSubmitting(true);
     try {
       const finalType = editType === '其他型号' ? editCustomType : editType;
-      const fullName = buildFullName(editCategory, finalMfr, finalType, editNote, editSpecDim, editSpecBurner, editSpecBasin, editSpecSilent, editSpecHandle, editSpecFlameout, editCustomSpecDim, editCustomSpecBurner);
+      const fullName = buildFullName(editCategory, finalMfr, finalType, editNote, editSpecDim, editSpecBurner, editSpecBasin, editSpecSilent, editSpecHandle, editSpecFlameout, editDeductTopSpace, editCustomSpecDim, editCustomSpecBurner);
       
       if (editType === '其他型号' && editCustomType) onAddPreset('model', editCustomType, editCategory);
       if (editManufacturer === '其他厂家' && customManufacturer) onAddPreset('manufacturer', customManufacturer);
@@ -194,7 +206,7 @@ export const EquipmentCatalog = ({
       if (editSpecBurner === '其他炉头' && editCustomSpecBurner) onAddPreset('burner', editCustomSpecBurner);
 
       await onUpdate(editingId, fullName, Number(editPrice));
-      setEditingId(null); setEditCustomType(''); setEditCustomSpecDim(''); setEditCustomSpecBurner('');
+      setEditingId(null); setEditCustomType(''); setEditCustomSpecDim(''); setEditCustomSpecBurner(''); setEditDeductTopSpace(true);
     } catch (e) { console.error(e); } finally { setIsSubmitting(false); }
   };
 
@@ -258,7 +270,8 @@ export const EquipmentCatalog = ({
               newSpecFlameout={newSpecFlameout} setNewSpecFlameout={setNewSpecFlameout}
               errorField={errorField} isSubmitting={isSubmitting}
               formattedPresets={formattedPresets}
-              volumeLabel={calculateTankVolume(selectedType === '其他型号' ? customType : selectedType)?.toString() || null}
+              volumeLabel={calculateTankVolume(newSpecDim === '其他尺寸' ? customSpecDim : newSpecDim, newDeductTopSpace)?.toString() || null}
+              deductTopSpace={newDeductTopSpace} setDeductTopSpace={setNewDeductTopSpace}
               onAdd={handleAdd} onCancel={() => setIsAdding(false)}
             />
 
@@ -297,11 +310,12 @@ export const EquipmentCatalog = ({
                             editSpecSilent={editSpecSilent} setEditSpecSilent={setEditSpecSilent}
                             editSpecHandle={editSpecHandle} setEditSpecHandle={setEditSpecHandle}
                             editSpecFlameout={editSpecFlameout} setEditSpecFlameout={setEditSpecFlameout}
+                            editDeductTopSpace={editDeductTopSpace} setEditDeductTopSpace={setEditDeductTopSpace}
                             formattedPresets={formattedPresets}
                             onStartEdit={handleStartEdit} onSaveEdit={handleSaveEdit}
                             onCancelEdit={() => setEditingId(null)} onDelete={onDelete}
                             isSubmitting={isSubmitting}
-                            volumeLabel={calculateTankVolume(editType === '其他型号' ? editCustomType : editType)?.toString() || null}
+                            volumeLabel={calculateTankVolume(editSpecDim === '其他尺寸' ? editCustomSpecDim : editSpecDim, editDeductTopSpace)?.toString() || null}
                           />
                         ))}
                       </Fragment>

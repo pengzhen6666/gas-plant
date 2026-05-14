@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, Loader2, ArrowUpRight, ArrowDownRight, Edit2, Trash2, X } from 'lucide-react';
 import { formatQty } from '../../utils/index';
 
@@ -7,11 +7,11 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
   const [selectedCategory, setSelectedCategory] = useState('全部');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   const filteredData = useMemo(() => {
     let result = filterType ? data.filter((d: any) => d.type === filterType) : data;
     
-    // 1. Keyword Search
     if (searchTerm) {
       result = result.filter((item: any) => 
         item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -19,32 +19,19 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
       );
     }
 
-    // 2. Global Category Filter
     if (selectedCategory !== '全部') {
       result = result.filter((item: any) => {
-        if (selectedCategory === '燃油') {
-          return item.type === '燃油采购';
-        }
-        if (selectedCategory === '日常收入') {
-          return item.type === '收入';
-        }
-        if (selectedCategory === '日常支出') {
-          return item.type === '支出';
-        }
-        // Match specific equipment categories
+        if (selectedCategory === '燃油') return item.type === '燃油采购';
+        if (selectedCategory === '日常收入') return item.type === '收入';
+        if (selectedCategory === '日常支出') return item.type === '支出';
         const matchCategory = item.category === selectedCategory;
         const matchKeyword = (item.title && item.title.includes(selectedCategory));
         return matchCategory || matchKeyword;
       });
     }
 
-    // 3. Date Range Filter
-    if (startDate) {
-      result = result.filter((item: any) => item.date >= startDate);
-    }
-    if (endDate) {
-      result = result.filter((item: any) => item.date <= endDate);
-    }
+    if (startDate) result = result.filter((item: any) => item.date >= startDate);
+    if (endDate) result = result.filter((item: any) => item.date <= endDate);
 
     return result;
   }, [data, filterType, searchTerm, selectedCategory, startDate, endDate]);
@@ -52,13 +39,11 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
   const totalAmount = useMemo(() => {
     return filteredData.reduce((sum: number, item: any) => {
       const amount = Number(item.amount);
-      // '收入' is positive, others (支出, 燃油采购, 设备采购) are negative
-      if (item.type === '收入') {
-        return sum + amount;
-      }
+      if (item.type === '收入') return sum + amount;
       return sum - amount;
     }, 0);
   }, [filteredData]);
+
   const totalQty = useMemo(() => {
     return filteredData.reduce((sum: number, item: any) => {
       const qStr = (item.quantity || '0').toString().replace(/[^\d.]/g, '');
@@ -67,28 +52,29 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
     }, 0);
   }, [filteredData]);
 
-  // Determine categories to show based on view
   const categories = useMemo(() => {
-    if (filterType === '设备采购') {
-      return ['全部', '油箱', '炉灶', '煲仔炉', '汤炉', '蒸柜', '运费', '其他配件'];
-    }
-    if (filterType === '燃油采购') {
-      return null;
-    }
-    // Accounting / History views
+    if (filterType === '设备采购') return ['全部', '油箱', '炉灶', '煲仔炉', '汤炉', '蒸柜', '运费', '其他配件'];
+    if (filterType === '燃油采购') return null;
     return ['全部', '燃油', '油箱', '炉灶', '煲仔炉', '汤炉', '蒸柜', '运费', '其他配件', '日常收入', '日常支出'];
   }, [filterType]);
+
+  const parseBreakdown = (notes: string) => {
+    if (!notes || !notes.includes('BREAKDOWN:')) return null;
+    try {
+      return JSON.parse(notes.split('BREAKDOWN:')[1]);
+    } catch (e) {
+      return null;
+    }
+  };
 
   return (
     <div className="glass-card p-8 mb-6 overflow-hidden relative min-h-[300px]">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-4">
           <h2 className="text-lg md:text-xl font-black text-white tracking-tighter whitespace-nowrap">{title}</h2>
-          {/* Categories - Horizontal Scroll on Mobile, hidden or small on desktop if needed */}
         </div>
 
         <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
-          {/* Date Selector Group - Compact on Desktop */}
           <div className="flex items-center gap-2 bg-white/[0.03] p-1 rounded-xl border border-white/5 md:w-auto">
             <div className="flex gap-0.5 border-r border-white/10 pr-1 shrink-0">
               {[
@@ -143,7 +129,6 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
             </div>
           </div>
 
-          {/* Search - Compact Width on Desktop */}
           <div className="relative w-full md:w-60">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
             <input 
@@ -156,26 +141,24 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
         </div>
       </div>
 
-        {/* Categories - Horizontal Scroll on Mobile */}
-        {categories && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`whitespace-nowrap px-4 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase transition-all ${
-                  selectedCategory === cat 
-                  ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20 scale-105' 
-                  : 'bg-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-300'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        )}
+      {categories && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`whitespace-nowrap px-4 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase transition-all ${
+                selectedCategory === cat 
+                ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20 scale-105' 
+                : 'bg-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-300'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {/* Global Summary Cards */}
       <div className={`grid ${totalQty > 0 ? 'grid-cols-2' : 'grid-cols-1'} gap-4 mb-8 animate-in fade-in slide-in-from-top-2 duration-300`}>
          <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
             <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">
@@ -185,7 +168,6 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
               ¥ {totalAmount.toLocaleString()}
             </p>
          </div>
-         {/* Only show quantity if unit is consistent (Fuel or specific Equipment) */}
          {(selectedCategory !== '全部' || filterType) && totalQty > 0 && (
            <div className="p-4 bg-brand-primary/5 rounded-2xl border border-brand-primary/10">
               <p className="text-[10px] text-brand-primary uppercase font-bold tracking-wider mb-1">
@@ -202,7 +184,6 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
 
       {isLoading && <div className="absolute inset-0 flex items-center justify-center bg-bg-primary/50 z-10"><Loader2 className="animate-spin text-brand-primary" /></div>}
       
-      {/* Desktop Table */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-white">
           <thead className="text-slate-400 text-sm border-b border-white/5">
@@ -216,51 +197,111 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {filteredData.map((item: any) => (
-              <tr key={item.id} className="hover:bg-white/5 transition-colors group">
-                <td className="py-4 text-slate-400 text-sm">{item.date}</td>
-                <td className="py-4 flex items-center gap-2">
-                  {item.type === '收入' || item.type === '销售录入' ? <ArrowUpRight size={14} className="text-emerald-400" /> : <ArrowDownRight size={14} className="text-rose-400" />}
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">
-                        {item.type === '设备采购' && item.title.includes('/') ? (
-                          <div className="flex flex-col">
-                            <span className="text-white">{item.title.split(' ')[0]}</span>
-                            <span className="text-slate-400 text-[10px]">{item.title.split(' ').slice(1).join(' ')}</span>
+            {filteredData.map((item: any) => {
+              const breakdown = parseBreakdown(item.notes || '');
+              const isExpanded = expandedId === item.id;
+              
+              return (
+                <React.Fragment key={item.id}>
+                  <tr 
+                    className={`hover:bg-white/5 transition-colors group cursor-pointer ${isExpanded ? 'bg-white/10' : ''}`}
+                    onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                  >
+                    <td className="py-4 text-slate-400 text-sm">{item.date}</td>
+                    <td className="py-4 flex items-center gap-2">
+                      {item.type === '收入' || item.type === '销售录入' ? <ArrowUpRight size={14} className="text-emerald-400" /> : <ArrowDownRight size={14} className="text-rose-400" />}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">
+                            {item.type === '设备采购' && item.title.includes('/') ? (
+                              <div className="flex flex-col">
+                                <span className="text-white">{item.title.split(' ')[0]}</span>
+                                <span className="text-slate-400 text-[10px]">{item.title.split(' ').slice(1).join(' ')}</span>
+                              </div>
+                            ) : item.title}
+                          </span>
+                          {item.source === 'sale' && (
+                            <span className="px-1.5 py-0.5 bg-blue-400/10 text-blue-400 text-[9px] rounded-full border border-blue-400/20 font-bold uppercase tracking-wider">
+                              销售单
+                            </span>
+                          )}
+                        </div>
+                        {item.category && (
+                          <span className="inline-block mt-1 px-1.5 py-0.5 bg-brand-primary/10 text-brand-primary text-[10px] rounded border border-brand-primary/20">
+                            {item.category}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-4 text-right text-slate-400 text-sm font-mono whitespace-nowrap">
+                       {formatQty(item.quantity)}
+                    </td>
+                    <td className="py-4 px-4 text-slate-500 text-xs max-w-[200px] truncate" title={item.notes?.split('BREAKDOWN:')[0]}>
+                      {item.notes?.split('BREAKDOWN:')[0] || '-'}
+                    </td>
+                    <td className="py-4 text-right font-bold whitespace-nowrap">
+                       <span className={item.type === '销售录入' ? 'text-blue-400' : ''}>
+                         ¥ {Number(item.amount).toLocaleString()}
+                       </span>
+                    </td>
+                    <td className="py-4 text-right">
+                      <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1 hover:text-brand-primary transition-colors"><Edit2 size={16} /></button>
+                        <button onClick={(e) => { e.stopPropagation(); onDelete(item.id, item); }} className="p-1 hover:text-rose-400 transition-colors"><Trash2 size={16} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                  {isExpanded && breakdown && (
+                    <tr>
+                      <td colSpan={6} className="bg-black/40 p-0 border-l-2 border-brand-primary">
+                        <div className="p-6 grid grid-cols-3 gap-8 animate-in slide-in-from-top-2 duration-300">
+                          <div className="space-y-2">
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">基础物料成本</p>
+                            <div className="flex justify-between items-end border-b border-white/5 pb-2">
+                              <div className="flex flex-col">
+                                <span className="text-xs text-slate-300">{item.title} (¥{breakdown.oilBasePrice}/吨)</span>
+                                <span className="text-[10px] text-slate-500">
+                                  {breakdown.barrelCount}桶 × 1000L × 密度{breakdown.density || '0.85'}
+                                </span>
+                              </div>
+                              <span className="text-sm font-bold text-white">¥{((parseFloat(item.quantity) / 1000) * parseFloat(breakdown.oilBasePrice)).toFixed(0)}</span>
+                            </div>
+                            <div className="flex justify-between items-end border-b border-white/5 pb-2">
+                              <span className="text-xs text-slate-300">吨桶费 (¥{breakdown.barrelCost} × {breakdown.barrelCount}个)</span>
+                              <span className="text-sm font-bold text-white">¥{(parseFloat(breakdown.barrelCost) * parseFloat(breakdown.barrelCount)).toFixed(0)}</span>
+                            </div>
                           </div>
-                        ) : item.title}
-                      </span>
-                      {item.source === 'sale' && (
-                        <span className="px-1.5 py-0.5 bg-blue-400/10 text-blue-400 text-[9px] rounded-full border border-blue-400/20 font-bold uppercase tracking-wider">
-                          销售单
-                        </span>
-                      )}
-                    </div>
-                    {item.category && (
-                      <span className="inline-block mt-1 px-1.5 py-0.5 bg-brand-primary/10 text-brand-primary text-[10px] rounded border border-brand-primary/20">
-                        {item.category}
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td className="py-4 text-right text-slate-400 text-sm font-mono whitespace-nowrap">
-                   {formatQty(item.quantity)}
-                </td>
-                <td className="py-4 px-4 text-slate-500 text-xs max-w-[200px] truncate" title={item.notes}>{item.notes || '-'}</td>
-                <td className="py-4 text-right font-bold whitespace-nowrap">
-                   <span className={item.type === '销售录入' ? 'text-blue-400' : ''}>
-                     ¥ {Number(item.amount).toLocaleString()}
-                   </span>
-                </td>
-                <td className="py-4 text-right">
-                  <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => onEdit(item)} className="p-1 hover:text-brand-primary transition-colors"><Edit2 size={16} /></button>
-                    <button onClick={() => onDelete(item.id, item)} className="p-1 hover:text-rose-400 transition-colors"><Trash2 size={16} /></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+
+                          <div className="space-y-2">
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">附加服务费用</p>
+                            <div className="flex justify-between items-end border-b border-white/5 pb-2">
+                              <span className="text-xs text-slate-300">手续费 ({breakdown.handlingRate}%)</span>
+                              <span className="text-sm font-bold text-white">¥{((parseFloat(item.quantity) / 1000) * parseFloat(breakdown.oilBasePrice) * (parseFloat(breakdown.handlingRate) / 100)).toFixed(0)}</span>
+                            </div>
+                            <div className="flex justify-between items-end border-b border-white/5 pb-2">
+                              <span className="text-xs text-slate-300">开票费 ({breakdown.taxRate}%)</span>
+                              <span className="text-sm font-bold text-white">¥{((parseFloat(item.quantity) / 1000) * parseFloat(breakdown.oilBasePrice) * (parseFloat(breakdown.taxRate) / 100)).toFixed(0)}</span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">物流转运成本</p>
+                            <div className="flex justify-between items-end border-b border-white/5 pb-2">
+                              <span className="text-xs text-slate-300">物流运费 (按吨计)</span>
+                              <span className="text-sm font-bold text-white">¥{breakdown.shippingFee}</span>
+                            </div>
+                            <div className="pt-2 flex justify-between items-center">
+                              <span className="text-[10px] text-brand-primary font-black uppercase">总支出核算</span>
+                              <span className="text-lg font-black text-brand-primary">¥{Number(item.amount).toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
             {filteredData.length === 0 && (
               <tr>
                 <td colSpan={6} className="py-20 text-center text-slate-600 italic">暂无进货记录</td>
@@ -270,7 +311,6 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
         </table>
       </div>
 
-      {/* Mobile Cards */}
       <div className="md:hidden space-y-4">
         {filteredData.map((item: any) => (
           <div key={item.id} className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-3">
@@ -303,7 +343,7 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
             
             {item.notes && (
               <div className="text-xs text-slate-500 bg-black/20 p-2 rounded-lg border border-white/5">
-                {item.notes}
+                {item.notes.split('BREAKDOWN:')[0]}
               </div>
             )}
             

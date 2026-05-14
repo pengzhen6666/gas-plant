@@ -22,6 +22,7 @@ interface AddEquipmentRowProps {
   newSpecSilent: boolean; setNewSpecSilent: (v: boolean) => void;
   newSpecHandle: boolean; setNewSpecHandle: (v: boolean) => void;
   newSpecFlameout: boolean; setNewSpecFlameout: (v: boolean) => void;
+  deductTopSpace: boolean; setDeductTopSpace: (v: boolean) => void;
   
   errorField: string | null;
   isSubmitting: boolean;
@@ -38,6 +39,7 @@ export const AddEquipmentRow = ({
   newSpecBurner, setNewSpecBurner, customSpecBurner, setCustomSpecBurner,
   newSpecBasin, setNewSpecBasin, newSpecSilent, setNewSpecSilent,
   newSpecHandle, setNewSpecHandle, newSpecFlameout, setNewSpecFlameout,
+  deductTopSpace, setDeductTopSpace,
   errorField, isSubmitting, formattedPresets, volumeLabel, onAdd, onCancel
 }: AddEquipmentRowProps) => {
   if (!isAdding) return null;
@@ -105,6 +107,7 @@ export const AddEquipmentRow = ({
           specSilent={newSpecSilent} setSpecSilent={setNewSpecSilent}
           specHandle={newSpecHandle} setSpecHandle={setNewSpecHandle}
           specFlameout={newSpecFlameout} setSpecFlameout={setNewSpecFlameout}
+          deductTopSpace={deductTopSpace} setDeductTopSpace={setDeductTopSpace}
           formattedPresets={formattedPresets}
           volumeLabel={volumeLabel}
         />

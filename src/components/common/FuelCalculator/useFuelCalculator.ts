@@ -31,8 +31,9 @@ export const useFuelCalculator = () => {
   const [fuelTypes, setFuelTypes] = useState<{ name: string, density: number }[]>(() => {
     const saved = localStorage.getItem('fuel_presets');
     return saved ? JSON.parse(saved) : [
-      { name: '宁煤', density: 0.778 },
-      { name: '桉燃', density: 0.820 }
+      { name: '宁煤液蜡2号', density: 0.778 },
+      { name: '桉燃3号油', density: 0.771 },
+      { name: '桉燃6号油', density: 0.93 }
     ];
   });
 
