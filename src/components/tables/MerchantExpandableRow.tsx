@@ -1,26 +1,24 @@
 import { useState, useMemo } from 'react';
 import { ChevronUp, ChevronDown, Phone as PhoneIcon, History as HistoryIcon, ShoppingCart } from 'lucide-react';
 import { kgToJin } from '../../utils/index';
+import { parseEquipName } from '../../config/equipment';
 import type { Sale, Transaction, MerchantSummary, SettlementType } from '../../types/index';
 
 const formatEquip = (equipStr: string) => {
   if (!equipStr) return null;
   return equipStr.split(/[,，]/).map((item, i) => {
-    const parts = item.trim().split('::');
-    if (parts.length === 3) {
-      return (
-        <div key={i} className="flex items-center gap-1.5 whitespace-nowrap">
-          <span className="px-1 py-0.5 bg-brand-primary/10 text-brand-primary text-[7px] font-black rounded border border-brand-primary/20 uppercase tracking-tighter">
-            {parts[0]}
-          </span>
-          <span className="text-white font-bold text-[9px]">{parts[1]}</span>
-          <span className="text-slate-400 text-[9px] truncate max-w-[150px]">
-            {parts[2]}
-          </span>
-        </div>
-      );
-    }
-    return <div key={i} className="text-slate-400 text-[9px]">{item.trim()}</div>;
+    const { category, manufacturer, itemName } = parseEquipName(item.trim());
+    return (
+      <div key={i} className="flex items-center gap-1.5 whitespace-nowrap">
+        <span className="px-1 py-0.5 bg-brand-primary/10 text-brand-primary text-[7px] font-black rounded border border-brand-primary/20 uppercase tracking-tighter">
+          {category}
+        </span>
+        <span className="text-white font-bold text-[9px]">{manufacturer}</span>
+        <span className="text-slate-400 text-[9px] truncate max-w-[150px]">
+          {itemName}
+        </span>
+      </div>
+    );
   });
 };
 

@@ -2,28 +2,26 @@ import { useState, useMemo } from 'react';
 import { Filter, Search, Loader2, Wallet, Edit2, Trash2, Package, PlusCircle } from 'lucide-react';
 import { MerchantExpandableRow } from './MerchantExpandableRow';
 import { kgToJin } from '../../utils/index';
+import { parseEquipName } from '../../config/equipment';
 import type { Sale, Transaction, MerchantSummary, SettlementType } from '../../types/index';
 
 const formatEquip = (equipStr: string) => {
   if (!equipStr) return null;
   return equipStr.split(/[,，]/).map((item, i) => {
-    const parts = item.trim().split('::');
-    if (parts.length === 3) {
-      return (
-        <div key={i} className="flex flex-col gap-0.5 mb-1 last:mb-0">
-          <div className="flex items-center gap-1.5">
-            <span className="px-1 py-0.5 bg-brand-primary/10 text-brand-primary text-[8px] font-black rounded border border-brand-primary/20 uppercase tracking-tighter">
-              {parts[0]}
-            </span>
-            <span className="text-white font-bold text-[10px]">{parts[1]}</span>
-          </div>
-          <div className="text-slate-400 text-[10px] pl-1 border-l border-white/10 ml-2">
-            {parts[2]}
-          </div>
+    const { category, manufacturer, itemName } = parseEquipName(item.trim());
+    return (
+      <div key={i} className="flex flex-col gap-0.5 mb-1 last:mb-0">
+        <div className="flex items-center gap-1.5">
+          <span className="px-1 py-0.5 bg-brand-primary/10 text-brand-primary text-[8px] font-black rounded border border-brand-primary/20 uppercase tracking-tighter">
+            {category}
+          </span>
+          <span className="text-white font-bold text-[10px]">{manufacturer}</span>
         </div>
-      );
-    }
-    return <div key={i} className="text-slate-400 text-[10px]">{item.trim()}</div>;
+        <div className="text-slate-400 text-[10px] pl-1 border-l border-white/10 ml-2">
+          {itemName}
+        </div>
+      </div>
+    );
   });
 };
 

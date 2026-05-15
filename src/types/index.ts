@@ -1,5 +1,5 @@
 export type RecordType = '收入' | '支出' | '燃油采购' | '设备采购' | '销售录入';
-export type SettlementType = '现结' | '月结' | '押一付一' | '其他';
+export type SettlementType = '现结' | '月结' | '押一付一' | '挂账' | '其他';
 
 export interface Transaction {
   id: string;

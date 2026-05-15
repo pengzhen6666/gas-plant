@@ -111,7 +111,8 @@ export const EquipmentCatalog = ({
     const customModels = formattedPresets.models.map(m => m.value);
 
     specs.forEach(s => {
-      if (STOVE_DIMENSIONS.includes(s) || customDims.includes(s)) dim = s;
+      const trimmed = s.trim();
+      if (STOVE_DIMENSIONS.includes(trimmed) || customDims.includes(trimmed) || /^\d+\*\d+\*\d+$/.test(trimmed.replace(/\s+/g, ''))) dim = trimmed;
       else if (s.endsWith('头') || s.endsWith('眼') || customBurners.includes(s)) burner = s.replace(/[头眼]$/, '');
       else if (s.endsWith('盆') || s.includes('#')) basin = s.replace('盆', '');
       else if (s === '静音') silent = true;
@@ -292,32 +293,45 @@ export const EquipmentCatalog = ({
                     const mfrItems = categoryItems.filter(item => parseName(item.name).manufacturer === mfr);
                     return (
                       <Fragment key={mfr}>
-                        {mfrItems.map((item) => (
-                          <EquipmentRow 
-                            key={item.id} item={item} editingId={editingId}
-                            editCategory={editCategory} setEditCategory={setEditCategory}
-                            editManufacturer={editManufacturer} setEditManufacturer={setEditManufacturer}
-                            customManufacturer={customManufacturer} setCustomManufacturer={setCustomManufacturer}
-                            editType={editType} setEditType={setEditType}
-                            editCustomType={editCustomType} setEditCustomType={setEditCustomType}
-                            editNote={editNote} setEditNote={setEditNote}
-                            editPrice={editPrice} setEditPrice={setEditPrice}
-                            editSpecDim={editSpecDim} setEditSpecDim={setEditSpecDim}
-                            editCustomSpecDim={editCustomSpecDim} setEditCustomSpecDim={setEditCustomSpecDim}
-                            editSpecBurner={editSpecBurner} setEditSpecBurner={setEditSpecBurner}
-                            editCustomSpecBurner={editCustomSpecBurner} setEditCustomSpecBurner={setEditCustomSpecBurner}
-                            editSpecBasin={editSpecBasin} setEditSpecBasin={setEditSpecBasin}
-                            editSpecSilent={editSpecSilent} setEditSpecSilent={setEditSpecSilent}
-                            editSpecHandle={editSpecHandle} setEditSpecHandle={setEditSpecHandle}
-                            editSpecFlameout={editSpecFlameout} setEditSpecFlameout={setEditSpecFlameout}
-                            editDeductTopSpace={editDeductTopSpace} setEditDeductTopSpace={setEditDeductTopSpace}
-                            formattedPresets={formattedPresets}
-                            onStartEdit={handleStartEdit} onSaveEdit={handleSaveEdit}
-                            onCancelEdit={() => setEditingId(null)} onDelete={onDelete}
-                            isSubmitting={isSubmitting}
-                            volumeLabel={calculateTankVolume(editSpecDim === '其他尺寸' ? editCustomSpecDim : editSpecDim, editDeductTopSpace)?.toString() || null}
-                          />
-                        ))}
+                        {mfrItems.map((item) => {
+                          const isEditing = editingId === item.id;
+                          const { itemName } = parseName(item.name);
+                          const currentSpecs = isEditing 
+                            ? { dim: editSpecDim === '其他尺寸' ? editCustomSpecDim : editSpecDim, deduct: editDeductTopSpace }
+                            : parseItemNameSpecs(itemName);
+                          
+                          const vLabel = calculateTankVolume(
+                            currentSpecs.dim, 
+                            isEditing ? (currentSpecs as any).deduct : (currentSpecs as any).deductTopSpace
+                          )?.toString() || null;
+
+                          return (
+                            <EquipmentRow 
+                              key={item.id} item={item} editingId={editingId}
+                              editCategory={editCategory} setEditCategory={setEditCategory}
+                              editManufacturer={editManufacturer} setEditManufacturer={setEditManufacturer}
+                              customManufacturer={customManufacturer} setCustomManufacturer={setCustomManufacturer}
+                              editType={editType} setEditType={setEditType}
+                              editCustomType={editCustomType} setEditCustomType={setEditCustomType}
+                              editNote={editNote} setEditNote={setEditNote}
+                              editPrice={editPrice} setEditPrice={setEditPrice}
+                              editSpecDim={editSpecDim} setEditSpecDim={setEditSpecDim}
+                              editCustomSpecDim={editCustomSpecDim} setEditCustomSpecDim={setEditCustomSpecDim}
+                              editSpecBurner={editSpecBurner} setEditSpecBurner={setEditSpecBurner}
+                              editCustomSpecBurner={editCustomSpecBurner} setEditCustomSpecBurner={setEditCustomSpecBurner}
+                              editSpecBasin={editSpecBasin} setEditSpecBasin={setEditSpecBasin}
+                              editSpecSilent={editSpecSilent} setEditSpecSilent={setEditSpecSilent}
+                              editSpecHandle={editSpecHandle} setEditSpecHandle={setEditSpecHandle}
+                              editSpecFlameout={editSpecFlameout} setEditSpecFlameout={setEditSpecFlameout}
+                              editDeductTopSpace={editDeductTopSpace} setEditDeductTopSpace={setEditDeductTopSpace}
+                              formattedPresets={formattedPresets}
+                              onStartEdit={handleStartEdit} onSaveEdit={handleSaveEdit}
+                              onCancelEdit={() => setEditingId(null)} onDelete={onDelete}
+                              isSubmitting={isSubmitting}
+                              volumeLabel={vLabel}
+                            />
+                          );
+                        })}
                       </Fragment>
                     );
                   })}

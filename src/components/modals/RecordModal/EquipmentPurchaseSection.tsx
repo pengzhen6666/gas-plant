@@ -25,11 +25,12 @@ export const EquipmentPurchaseSection: React.FC<Props> = ({
                   key={item.id}
                   type="button"
                   onClick={() => {
+                    const parsed = parseEquipName(item.name);
                     setFormData({
                       ...formData, 
-                      title: `${mfr} ${model}`,
+                      title: `${parsed.mfr} ${parsed.model}`,
                       unit_price: item.price.toString(),
-                      category: item.name.split('::')[0]
+                      category: parsed.category
                     });
                   }}
                   className="px-2 py-1 bg-brand-primary/10 text-brand-primary text-[10px] font-bold rounded border border-brand-primary/20 hover:bg-brand-primary hover:text-white transition-all"

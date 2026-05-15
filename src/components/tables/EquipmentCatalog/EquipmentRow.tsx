@@ -130,12 +130,19 @@ export const EquipmentRow = ({
             />
           </div>
         ) : (
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2 mb-1">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-2">
               <span className="px-1.5 py-0.5 rounded bg-brand-primary/10 text-brand-primary text-[10px] font-bold">{category}</span>
               <span className="text-slate-500 text-[10px]">{manufacturer}</span>
             </div>
-            <span className="text-white font-medium text-sm">{itemName}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-white font-medium text-sm">{itemName}</span>
+              {category === '油箱' && volumeLabel && (
+                <span className="px-2 py-0.5 bg-emerald-400/10 text-emerald-400 text-[10px] font-bold rounded border border-emerald-400/20">
+                  预估容积: {volumeLabel}L {itemName.includes('满装') ? '(满装)' : '(扣除顶部)'}
+                </span>
+              )}
+            </div>
           </div>
         )}
       </td>

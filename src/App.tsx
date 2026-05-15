@@ -351,7 +351,7 @@ function App() {
     { id: 'fuel', label: '燃油进货', icon: Fuel },
     { id: 'stoves', label: '设备采购', icon: FlameKindling },
     { id: 'history', label: '全部历史', icon: History },
-    { id: 'calculator', label: '价格换算', icon: Calculator },
+    { id: 'calculator', label: '价格走势', icon: TrendingUp },
   ];
 
 

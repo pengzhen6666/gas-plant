@@ -33,6 +33,7 @@ export const CommonFields: React.FC<Props> = ({
             value={formData.quantity}
             onChange={e => setFormData({...formData, quantity: e.target.value})}
             required
+            disabled={purchaseDetails.isAuto}
           />
         </div>
         <div className="space-y-2">

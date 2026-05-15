@@ -1,5 +1,4 @@
 import { X, Loader2 } from 'lucide-react';
-import type { RecordType } from '../../types/index';
 
 // Sub-components
 import { FuelPurchaseSection } from './RecordModal/FuelPurchaseSection';
@@ -8,10 +7,25 @@ import { SalesEntrySection } from './RecordModal/SalesEntrySection';
 import { CommonFields } from './RecordModal/CommonFields';
 import { useRecordModalLogic } from './RecordModal/useRecordModalLogic';
 
+import type { RecordType, Transaction, Sale, SettlementType } from '../../types/index';
+
+interface RecordModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAddTransaction: (data: Partial<Transaction>) => void;
+  onAddSale: (data: Partial<Sale>) => void;
+  onUpdateTransaction: (id: string, data: Partial<Transaction>) => void;
+  onUpdateSale: (id: string, data: Partial<Sale>) => void;
+  isSubmitting: boolean;
+  editData: any;
+  prefillData: any;
+  equipmentCatalog: any[];
+}
+
 export const RecordModal = ({ 
   isOpen, onClose, onAddTransaction, onAddSale, onUpdateTransaction, onUpdateSale, 
   isSubmitting, editData, prefillData, equipmentCatalog 
-}: any) => {
+}: RecordModalProps) => {
   const {
     formData, setFormData,
     purchaseDetails, setPurchaseDetails,

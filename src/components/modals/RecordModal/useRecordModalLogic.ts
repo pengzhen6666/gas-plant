@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import type { RecordType, SettlementType } from '../../../types/index';
+import type { RecordType, SettlementType, Transaction, Sale } from '../../../types/index';
 import { jinToKg } from '../../../utils/index';
+import { parseEquipName } from '../../../config/equipment';
 
 interface Props {
   isOpen: boolean;
   editData: any;
   prefillData: any;
   onClose: () => void;
-  onAddTransaction: (data: any) => void;
-  onAddSale: (data: any) => void;
-  onUpdateTransaction: (id: string, data: any) => void;
-  onUpdateSale: (id: string, data: any) => void;
+  onAddTransaction: (data: Partial<Transaction>) => void;
+  onAddSale: (data: Partial<Sale>) => void;
+  onUpdateTransaction: (id: string, data: Partial<Transaction>) => void;
+  onUpdateSale: (id: string, data: Partial<Sale>) => void;
 }
 
 export const useRecordModalLogic = ({ 
   isOpen, editData, prefillData, onClose, onAddTransaction, onAddSale, onUpdateTransaction, onUpdateSale 
 }: Props) => {
-  const [inputUnit, setInputUnit] = useState<'kg' | '斤'>('kg');
+  const [inputUnit, setInputUnit] = useState<'kg' | '斤' | 'L'>('kg');
   const [filterMfr, setFilterMfr] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     type: '收入' as RecordType,
@@ -40,9 +41,14 @@ export const useRecordModalLogic = ({
     oilBasePrice: '',
     barrelCost: '300',
     barrelCount: '0',
+    density: '0.85',
+    priceUnit: 'ton' as 'ton' | 'barrel',
     handlingRate: '0.3',
     taxRate: '1.0',
     shippingFee: '700',
+    useHandlingFee: false,
+    useTaxFee: false,
+    isManualShipping: false,
     isAuto: false
   });
 
@@ -65,9 +71,11 @@ export const useRecordModalLogic = ({
 
   useEffect(() => {
     if (formData.type === '燃油采购' && !formData.title && fuelPresets.length > 0) {
-      setFormData(prev => ({ ...prev, title: fuelPresets[0].name }));
+      const first = fuelPresets[0];
+      setFormData(prev => ({ ...prev, title: first.name }));
+      setPurchaseDetails(prev => ({ ...prev, density: first.density.toString() }));
     }
-  }, [formData.type, fuelPresets]);
+  }, [formData.type, formData.title, fuelPresets]);
 
   useEffect(() => {
     if (editData) {
@@ -79,7 +87,7 @@ export const useRecordModalLogic = ({
           date: editData.delivery_date,
           quantity: editData.quantity.toString(),
           unit_price: '', 
-          notes: editData.notes || '',
+          notes: (editData.notes || '').split('BREAKDOWN:')[0].trim(),
           customer_name: editData.customer_name,
           phone: editData.phone || '',
           total_price: editData.total_price.toString(),
@@ -102,7 +110,7 @@ export const useRecordModalLogic = ({
           date: editData.date,
           quantity: editData.quantity?.replace(/[^\d.]/g, '') || '', 
           unit_price: '',
-          notes: editData.notes || '',
+          notes: (editData.notes || '').split('BREAKDOWN:')[0].trim(),
           customer_name: '',
           phone: '',
           total_price: '',
@@ -158,9 +166,14 @@ export const useRecordModalLogic = ({
         oilBasePrice: '',
         barrelCost: '300',
         barrelCount: '0',
+        density: '0.85',
+        priceUnit: 'ton',
         handlingRate: '0.3',
         taxRate: '1.0',
         shippingFee: '700',
+        useHandlingFee: false,
+        useTaxFee: false,
+        isManualShipping: false,
         isAuto: false
       });
     }
@@ -170,7 +183,14 @@ export const useRecordModalLogic = ({
         const jsonPart = editData.notes.split('BREAKDOWN:')[1];
         if (jsonPart) {
           const breakdown = JSON.parse(jsonPart);
-          setPurchaseDetails({ ...breakdown, isAuto: true });
+          setPurchaseDetails({ 
+            useHandlingFee: false, 
+            useTaxFee: false, 
+            density: '0.85',
+            priceUnit: 'ton',
+            ...breakdown, 
+            isAuto: true 
+          });
         }
       } catch (e) { console.error('Failed to parse breakdown', e); }
     }
@@ -178,32 +198,57 @@ export const useRecordModalLogic = ({
 
   useEffect(() => {
     if (formData.type === '燃油采购' && purchaseDetails.isAuto) {
-      const currentPreset = fuelPresets.find(p => p.name === formData.title);
-      const density = currentPreset?.density || 0.85;
+      const density = parseFloat(purchaseDetails.density) || 0.85;
       const barrelCount = parseFloat(purchaseDetails.barrelCount) || 0;
       const weightKg = barrelCount * 1000 * density;
       const weightTon = weightKg / 1000;
+      
       const basePrice = parseFloat(purchaseDetails.oilBasePrice) || 0;
       const barrelCost = parseFloat(purchaseDetails.barrelCost) || 0;
       const handlingRate = parseFloat(purchaseDetails.handlingRate) || 0;
       const taxRate = parseFloat(purchaseDetails.taxRate) || 0;
-      const oilTotal = weightTon * basePrice;
+      
+      // Calculate oil total based on price unit
+      const oilTotal = purchaseDetails.priceUnit === 'barrel' 
+        ? barrelCount * basePrice 
+        : weightTon * basePrice;
+        
       const barrelTotal = barrelCount * barrelCost;
-      const handlingFee = oilTotal * (handlingRate / 100);
-      const taxFee = oilTotal * (taxRate / 100);
-      let calculatedShipping = 700;
-      if (weightTon > 1) {
-        const perTon = formData.title.includes('宁煤') ? 600 : 610;
-        calculatedShipping = weightTon * perTon;
+      const handlingFee = purchaseDetails.useHandlingFee ? oilTotal * (handlingRate / 100) : 0;
+      const taxFee = purchaseDetails.useTaxFee ? oilTotal * (taxRate / 100) : 0;
+      
+      let calculatedShipping = parseFloat(purchaseDetails.shippingFee) || 0;
+      if (!purchaseDetails.isManualShipping) {
+        calculatedShipping = 700;
+        if (barrelCount > 1) {
+          const perBarrel = formData.title.includes('宁煤') ? 600 : 610;
+          calculatedShipping = barrelCount * perBarrel;
+        }
+        if (purchaseDetails.shippingFee !== calculatedShipping.toFixed(0)) {
+          setPurchaseDetails(prev => ({ ...prev, shippingFee: calculatedShipping.toFixed(0) }));
+        }
       }
-      setPurchaseDetails(prev => ({ ...prev, shippingFee: calculatedShipping.toFixed(0) }));
+      
       const total = oilTotal + barrelTotal + handlingFee + taxFee + calculatedShipping;
-      setFormData(prev => ({ ...prev, quantity: weightKg.toFixed(0), amount: total.toFixed(0) }));
+      
+      const newAmount = total.toFixed(2).replace(/\.?0+$/, '');
+      const newQty = weightKg.toFixed(0);
+      const effectiveUP = weightKg > 0 ? (total / weightKg).toFixed(2).replace(/\.?0+$/, '') : '';
+
+      if (formData.amount !== newAmount || formData.quantity !== newQty || formData.unit_price !== effectiveUP) {
+        setFormData(prev => ({ 
+          ...prev, 
+          quantity: newQty, 
+          amount: newAmount,
+          unit_price: effectiveUP
+        }));
+      }
     }
-  }, [formData.title, purchaseDetails.isAuto, purchaseDetails.oilBasePrice, purchaseDetails.barrelCost, purchaseDetails.barrelCount, purchaseDetails.handlingRate, purchaseDetails.taxRate, fuelPresets]);
+  }, [formData.type, purchaseDetails.isAuto, purchaseDetails.oilBasePrice, purchaseDetails.barrelCount, purchaseDetails.density, purchaseDetails.priceUnit, purchaseDetails.handlingRate, purchaseDetails.taxRate, purchaseDetails.useHandlingFee, purchaseDetails.useTaxFee, purchaseDetails.barrelCost, purchaseDetails.shippingFee, purchaseDetails.isManualShipping]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (formData.type === '燃油采购' && purchaseDetails.isAuto) return;
+    
     const up = parseFloat(formData.unit_price);
     const qty = parseFloat(formData.quantity);
     if (!isNaN(up) && !isNaN(qty) && up > 0 && qty > 0) {
@@ -214,7 +259,7 @@ export const useRecordModalLogic = ({
         if (formData.amount !== total) setFormData(prev => ({...prev, amount: total}));
       }
     }
-  }, [formData.unit_price, formData.quantity, formData.type, isOpen]);
+  }, [formData.unit_price, formData.quantity, formData.type, formData.total_price, formData.amount, purchaseDetails.isAuto, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,7 +271,7 @@ export const useRecordModalLogic = ({
     if (formData.type === '销售录入') {
       const totalPrice = Number(formData.total_price);
       const paidAmount = Number(formData.paid_amount);
-      let status: any = '未付款';
+      let status: '已付款' | '未付款' | '部分付款' = '未付款';
       if (paidAmount >= totalPrice - 0.01) status = '已付款';
       else if (paidAmount > 0) status = '部分付款';
       const finalQuantity = inputUnit === '斤' ? jinToKg(formData.quantity) : Number(formData.quantity);
@@ -251,7 +296,9 @@ export const useRecordModalLogic = ({
         const currentPreset = fuelPresets.find(p => p.name === formData.title);
         const density = currentPreset?.density || 0.85;
         const breakdownStr = `BREAKDOWN:${JSON.stringify({ ...purchaseDetails, density, isAuto: undefined })}`;
-        finalNotes = finalNotes ? `${finalNotes}\n${breakdownStr}` : breakdownStr;
+        // Clean existing breakdown from notes if any, then append new one
+        const cleanNotes = (formData.notes || '').split('BREAKDOWN:')[0].trim();
+        finalNotes = cleanNotes ? `${cleanNotes}\n${breakdownStr}` : breakdownStr;
       }
       const txData = {
         type: formData.type,
@@ -274,14 +321,50 @@ export const useRecordModalLogic = ({
   };
 
   const toggleUnit = () => {
-    if (!formData.quantity) { setInputUnit(inputUnit === 'kg' ? '斤' : 'kg'); return; }
-    if (inputUnit === 'kg') {
-      setFormData({...formData, quantity: (Number(formData.quantity) * 2).toFixed(2).replace(/\.?0+$/, '')});
-      setInputUnit('斤');
-    } else {
-      setFormData({...formData, quantity: (Number(formData.quantity) / 2).toFixed(2).replace(/\.?0+$/, '')});
-      setInputUnit('kg');
+    const units: ('kg' | '斤' | 'L')[] = ['kg', '斤', 'L'];
+    const currentIndex = units.indexOf(inputUnit);
+    const newUnit = units[(currentIndex + 1) % units.length];
+    
+    if (!formData.quantity && !formData.unit_price) { 
+      setInputUnit(newUnit); 
+      return; 
     }
+    
+    const density = parseFloat(purchaseDetails.density) || 0.85;
+    
+    setFormData(prev => {
+      const updates: any = {};
+      if (prev.quantity && prev.unit_price) {
+        const q = parseFloat(prev.quantity);
+        const p = parseFloat(prev.unit_price);
+        
+        // 1. First, convert current value back to KG base
+        let baseQty = q;
+        let basePrice = p;
+        if (inputUnit === '斤') {
+          baseQty = q / 2;
+          basePrice = p * 2;
+        } else if (inputUnit === 'L') {
+          baseQty = q * density;
+          basePrice = p / density;
+        }
+        
+        // 2. Then, convert from KG base to the new unit
+        if (newUnit === 'kg') {
+          updates.quantity = baseQty.toFixed(2).replace(/\.?0+$/, '');
+          updates.unit_price = basePrice.toFixed(2).replace(/\.?0+$/, '');
+        } else if (newUnit === '斤') {
+          updates.quantity = (baseQty * 2).toFixed(2).replace(/\.?0+$/, '');
+          updates.unit_price = (basePrice / 2).toFixed(2).replace(/\.?0+$/, '');
+        } else if (newUnit === 'L') {
+          updates.quantity = (baseQty / density).toFixed(2).replace(/\.?0+$/, '');
+          updates.unit_price = (basePrice * density).toFixed(2).replace(/\.?0+$/, '');
+        }
+      }
+      return { ...prev, ...updates };
+    });
+    
+    setInputUnit(newUnit);
   };
 
   return {
@@ -293,10 +376,6 @@ export const useRecordModalLogic = ({
     handleSubmit,
     handlePhoneChange,
     toggleUnit,
-    parseEquipName: (fullName: string) => {
-      const parts = fullName.split('::');
-      if (parts.length === 3) return { cat: parts[0], mfr: parts[1], model: parts[2] };
-      return { cat: '', mfr: '', model: fullName };
-    }
+    parseEquipName
   };
 };
