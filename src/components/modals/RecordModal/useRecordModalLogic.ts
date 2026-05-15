@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { RecordType, SettlementType, Transaction, Sale } from '../../../types/index';
+import type { RecordType, SettlementType } from '../../../types/index';
 import { jinToKg } from '../../../utils/index';
 import { parseEquipName } from '../../../config/equipment';
 

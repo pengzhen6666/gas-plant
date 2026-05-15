@@ -7,7 +7,7 @@ import { SalesEntrySection } from './RecordModal/SalesEntrySection';
 import { CommonFields } from './RecordModal/CommonFields';
 import { useRecordModalLogic } from './RecordModal/useRecordModalLogic';
 
-import type { RecordType, Transaction, Sale } from '../../types/index';
+import type { RecordType } from '../../types/index';
 
 interface RecordModalProps {
   isOpen: boolean;
