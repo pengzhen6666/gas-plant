@@ -19,8 +19,7 @@ import {
   Lock,
   ArrowUp,
   ArrowDown,
-  Package,
-  Calculator
+  Package
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { LoginModal } from './components/modals/LoginModal';
@@ -39,7 +38,6 @@ import { DataTable } from './components/tables/DataTable';
 import { SalesTable } from './components/tables/SalesTable';
 import { ExpandableMerchantRow } from './components/tables/ExpandableMerchantRow';
 import { EquipmentCatalog } from './components/tables/EquipmentCatalog';
-import { FuelCalculator } from './components/common/FuelCalculator';
 
 
 
@@ -721,11 +719,6 @@ function App() {
                 />
              </div>
           )}
-          {activeTab === 'calculator' && (
-            <div className="h-full">
-              <FuelCalculator />
-            </div>
-          )}
         </div>
       </main>
 
@@ -743,9 +736,9 @@ function App() {
         isOpen={isModalOpen} 
         onClose={() => { setIsModalOpen(false); setEditData(null); setPrefillData(null); }}
         onAddTransaction={addTransaction}
-        onAddSale={addSale}
+        onAddSale={(data: any) => addSale(data)}
         onUpdateTransaction={(id: string, data: any) => updateTransaction(id, data)}
-        onUpdateSale={updateSale}
+        onUpdateSale={(id: string, data: any) => updateSale(id, data)}
         isSubmitting={isSubmitting}
         editData={editData}
         prefillData={prefillData}

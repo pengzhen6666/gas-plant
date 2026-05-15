@@ -129,39 +129,77 @@ export const FuelPurchaseSection: React.FC<Props> = ({
         </div>
         <div className="grid grid-cols-3 gap-2">
           <div className="space-y-1">
-            <label className="flex items-center gap-1.5 cursor-pointer group">
-              <input 
-                type="checkbox" 
-                checked={purchaseDetails.useHandlingFee} 
-                onChange={e => setPurchaseDetails({...purchaseDetails, useHandlingFee: e.target.checked, isAuto: true})}
-                className="w-3 h-3 rounded border-white/20 bg-black/20 text-brand-primary focus:ring-0"
-              />
-              <span className={`text-[9px] font-bold transition-colors ${purchaseDetails.useHandlingFee ? 'text-brand-primary' : 'text-slate-500'}`}>手续费%</span>
-            </label>
+            <div className="flex justify-between items-center">
+              <label className="flex items-center gap-1.5 cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  checked={purchaseDetails.useHandlingFee} 
+                  onChange={e => setPurchaseDetails({...purchaseDetails, useHandlingFee: e.target.checked, isAuto: true})}
+                  className="w-3 h-3 rounded border-white/20 bg-black/20 text-brand-primary focus:ring-0"
+                />
+                <span className={`text-[9px] font-bold transition-colors ${purchaseDetails.useHandlingFee ? 'text-brand-primary' : 'text-slate-500'}`}>手续费</span>
+              </label>
+              <div className="flex bg-black/20 rounded-md p-0.5 border border-white/5">
+                <button 
+                  type="button"
+                  onClick={() => setPurchaseDetails({...purchaseDetails, handlingFeeMode: 'percent', isAuto: true})}
+                  className={`px-1 py-0.5 text-[7px] font-bold rounded transition-all ${purchaseDetails.handlingFeeMode === 'percent' ? 'bg-brand-primary text-white shadow-sm' : 'text-slate-500'}`}
+                >%</button>
+                <button 
+                  type="button"
+                  onClick={() => setPurchaseDetails({...purchaseDetails, handlingFeeMode: 'fixed', isAuto: true})}
+                  className={`px-1 py-0.5 text-[7px] font-bold rounded transition-all ${purchaseDetails.handlingFeeMode === 'fixed' ? 'bg-brand-primary text-white shadow-sm' : 'text-slate-500'}`}
+                >¥</button>
+              </div>
+            </div>
             <input 
               type="number" step="0.01"
               className={`w-full bg-bg-secondary border rounded-lg px-2 py-1.5 text-xs text-white transition-opacity ${purchaseDetails.useHandlingFee ? 'border-brand-primary/30' : 'border-white/10 opacity-40'}`}
-              value={purchaseDetails.handlingRate}
-              onChange={e => setPurchaseDetails({...purchaseDetails, handlingRate: e.target.value, isAuto: true})}
+              value={purchaseDetails.handlingFeeMode === 'percent' ? purchaseDetails.handlingRate : purchaseDetails.handlingFeeFixed}
+              onChange={e => setPurchaseDetails({
+                ...purchaseDetails, 
+                [purchaseDetails.handlingFeeMode === 'percent' ? 'handlingRate' : 'handlingFeeFixed']: e.target.value, 
+                isAuto: true
+              })}
               disabled={!purchaseDetails.useHandlingFee}
+              placeholder={purchaseDetails.handlingFeeMode === 'percent' ? "%" : "金额"}
             />
           </div>
           <div className="space-y-1">
-            <label className="flex items-center gap-1.5 cursor-pointer group">
-              <input 
-                type="checkbox" 
-                checked={purchaseDetails.useTaxFee} 
-                onChange={e => setPurchaseDetails({...purchaseDetails, useTaxFee: e.target.checked, isAuto: true})}
-                className="w-3 h-3 rounded border-white/20 bg-black/20 text-brand-primary focus:ring-0"
-              />
-              <span className={`text-[9px] font-bold transition-colors ${purchaseDetails.useTaxFee ? 'text-brand-primary' : 'text-slate-500'}`}>开票费%</span>
-            </label>
+            <div className="flex justify-between items-center">
+              <label className="flex items-center gap-1.5 cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  checked={purchaseDetails.useTaxFee} 
+                  onChange={e => setPurchaseDetails({...purchaseDetails, useTaxFee: e.target.checked, isAuto: true})}
+                  className="w-3 h-3 rounded border-white/20 bg-black/20 text-brand-primary focus:ring-0"
+                />
+                <span className={`text-[9px] font-bold transition-colors ${purchaseDetails.useTaxFee ? 'text-brand-primary' : 'text-slate-500'}`}>开票费</span>
+              </label>
+              <div className="flex bg-black/20 rounded-md p-0.5 border border-white/5">
+                <button 
+                  type="button"
+                  onClick={() => setPurchaseDetails({...purchaseDetails, taxFeeMode: 'percent', isAuto: true})}
+                  className={`px-1 py-0.5 text-[7px] font-bold rounded transition-all ${purchaseDetails.taxFeeMode === 'percent' ? 'bg-brand-primary text-white shadow-sm' : 'text-slate-500'}`}
+                >%</button>
+                <button 
+                  type="button"
+                  onClick={() => setPurchaseDetails({...purchaseDetails, taxFeeMode: 'fixed', isAuto: true})}
+                  className={`px-1 py-0.5 text-[7px] font-bold rounded transition-all ${purchaseDetails.taxFeeMode === 'fixed' ? 'bg-brand-primary text-white shadow-sm' : 'text-slate-500'}`}
+                >¥</button>
+              </div>
+            </div>
             <input 
               type="number" step="0.01"
               className={`w-full bg-bg-secondary border rounded-lg px-2 py-1.5 text-xs text-white transition-opacity ${purchaseDetails.useTaxFee ? 'border-brand-primary/30' : 'border-white/10 opacity-40'}`}
-              value={purchaseDetails.taxRate}
-              onChange={e => setPurchaseDetails({...purchaseDetails, taxRate: e.target.value, isAuto: true})}
+              value={purchaseDetails.taxFeeMode === 'percent' ? purchaseDetails.taxRate : purchaseDetails.taxFeeFixed}
+              onChange={e => setPurchaseDetails({
+                ...purchaseDetails, 
+                [purchaseDetails.taxFeeMode === 'percent' ? 'taxRate' : 'taxFeeFixed']: e.target.value, 
+                isAuto: true
+              })}
               disabled={!purchaseDetails.useTaxFee}
+              placeholder={purchaseDetails.taxFeeMode === 'percent' ? "%" : "金额"}
             />
           </div>
           <div className="space-y-1">

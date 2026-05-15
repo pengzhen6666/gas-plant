@@ -38,7 +38,9 @@ export const SalesEntrySection: React.FC<Props> = ({
           >
             <option value="现结">现结</option>
             <option value="月结">月结</option>
+            <option value="押一付一">押一付一</option>
             <option value="挂账">挂账</option>
+            <option value="其他">其他</option>
           </select>
         </div>
       </div>

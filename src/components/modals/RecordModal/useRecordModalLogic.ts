@@ -45,6 +45,10 @@ export const useRecordModalLogic = ({
     priceUnit: 'ton' as 'ton' | 'barrel',
     handlingRate: '0.3',
     taxRate: '1.0',
+    handlingFeeFixed: '',
+    taxFeeFixed: '',
+    handlingFeeMode: 'percent' as 'percent' | 'fixed',
+    taxFeeMode: 'percent' as 'percent' | 'fixed',
     shippingFee: '700',
     useHandlingFee: false,
     useTaxFee: false,
@@ -170,6 +174,10 @@ export const useRecordModalLogic = ({
         priceUnit: 'ton',
         handlingRate: '0.3',
         taxRate: '1.0',
+        handlingFeeFixed: '',
+        taxFeeFixed: '',
+        handlingFeeMode: 'percent',
+        taxFeeMode: 'percent',
         shippingFee: '700',
         useHandlingFee: false,
         useTaxFee: false,
@@ -214,8 +222,24 @@ export const useRecordModalLogic = ({
         : weightTon * basePrice;
         
       const barrelTotal = barrelCount * barrelCost;
-      const handlingFee = purchaseDetails.useHandlingFee ? oilTotal * (handlingRate / 100) : 0;
-      const taxFee = purchaseDetails.useTaxFee ? oilTotal * (taxRate / 100) : 0;
+      
+      let handlingFee = 0;
+      if (purchaseDetails.useHandlingFee) {
+        if (purchaseDetails.handlingFeeMode === 'percent') {
+          handlingFee = oilTotal * (handlingRate / 100);
+        } else {
+          handlingFee = parseFloat(purchaseDetails.handlingFeeFixed) || 0;
+        }
+      }
+
+      let taxFee = 0;
+      if (purchaseDetails.useTaxFee) {
+        if (purchaseDetails.taxFeeMode === 'percent') {
+          taxFee = oilTotal * (taxRate / 100);
+        } else {
+          taxFee = parseFloat(purchaseDetails.taxFeeFixed) || 0;
+        }
+      }
       
       let calculatedShipping = parseFloat(purchaseDetails.shippingFee) || 0;
       if (!purchaseDetails.isManualShipping) {
@@ -244,7 +268,7 @@ export const useRecordModalLogic = ({
         }));
       }
     }
-  }, [formData.type, purchaseDetails.isAuto, purchaseDetails.oilBasePrice, purchaseDetails.barrelCount, purchaseDetails.density, purchaseDetails.priceUnit, purchaseDetails.handlingRate, purchaseDetails.taxRate, purchaseDetails.useHandlingFee, purchaseDetails.useTaxFee, purchaseDetails.barrelCost, purchaseDetails.shippingFee, purchaseDetails.isManualShipping]);
+  }, [formData.type, purchaseDetails.isAuto, purchaseDetails.oilBasePrice, purchaseDetails.barrelCount, purchaseDetails.density, purchaseDetails.priceUnit, purchaseDetails.handlingRate, purchaseDetails.taxRate, purchaseDetails.handlingFeeFixed, purchaseDetails.taxFeeFixed, purchaseDetails.handlingFeeMode, purchaseDetails.taxFeeMode, purchaseDetails.useHandlingFee, purchaseDetails.useTaxFee, purchaseDetails.barrelCost, purchaseDetails.shippingFee, purchaseDetails.isManualShipping]);
 
   useEffect(() => {
     if (formData.type === '燃油采购' && purchaseDetails.isAuto) return;

@@ -281,16 +281,28 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
 
                           <div className="space-y-2">
                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">附加服务费用</p>
-                            {breakdown.useHandlingFee !== false && (breakdown.useHandlingFee || parseFloat(breakdown.handlingRate) > 0) && (
+                            {breakdown.useHandlingFee !== false && (breakdown.useHandlingFee || (breakdown.handlingFeeMode === 'fixed' ? parseFloat(breakdown.handlingFeeFixed) > 0 : parseFloat(breakdown.handlingRate) > 0)) && (
                               <div className="flex justify-between items-end border-b border-white/5 pb-2">
-                                <span className="text-xs text-slate-300">手续费 ({breakdown.handlingRate}%)</span>
-                                <span className="text-sm font-bold text-white">¥{((parseFloat(item.quantity) / 1000) * parseFloat(breakdown.oilBasePrice) * (parseFloat(breakdown.handlingRate) / 100)).toFixed(2).replace(/\.?0+$/, '')}</span>
+                                <span className="text-xs text-slate-300">
+                                  手续费 {breakdown.handlingFeeMode === 'fixed' ? '(固定金额)' : `(${breakdown.handlingRate}%)`}
+                                </span>
+                                <span className="text-sm font-bold text-white">
+                                  ¥{breakdown.handlingFeeMode === 'fixed' 
+                                    ? parseFloat(breakdown.handlingFeeFixed || 0).toFixed(2).replace(/\.?0+$/, '')
+                                    : ((parseFloat(item.quantity) / 1000) * parseFloat(breakdown.oilBasePrice) * (parseFloat(breakdown.handlingRate || 0) / 100)).toFixed(2).replace(/\.?0+$/, '')}
+                                </span>
                               </div>
                             )}
-                            {breakdown.useTaxFee !== false && (breakdown.useTaxFee || parseFloat(breakdown.taxRate) > 0) && (
+                            {breakdown.useTaxFee !== false && (breakdown.useTaxFee || (breakdown.taxFeeMode === 'fixed' ? parseFloat(breakdown.taxFeeFixed) > 0 : parseFloat(breakdown.taxRate) > 0)) && (
                               <div className="flex justify-between items-end border-b border-white/5 pb-2">
-                                <span className="text-xs text-slate-300">开票费 ({breakdown.taxRate}%)</span>
-                                <span className="text-sm font-bold text-white">¥{((parseFloat(item.quantity) / 1000) * parseFloat(breakdown.oilBasePrice) * (parseFloat(breakdown.taxRate) / 100)).toFixed(2).replace(/\.?0+$/, '')}</span>
+                                <span className="text-xs text-slate-300">
+                                  开票费 {breakdown.taxFeeMode === 'fixed' ? '(固定金额)' : `(${breakdown.taxRate}%)`}
+                                </span>
+                                <span className="text-sm font-bold text-white">
+                                  ¥{breakdown.taxFeeMode === 'fixed' 
+                                    ? parseFloat(breakdown.taxFeeFixed || 0).toFixed(2).replace(/\.?0+$/, '')
+                                    : ((parseFloat(item.quantity) / 1000) * parseFloat(breakdown.oilBasePrice) * (parseFloat(breakdown.taxRate || 0) / 100)).toFixed(2).replace(/\.?0+$/, '')}
+                                </span>
                               </div>
                             )}
                             {(breakdown.useHandlingFee === false || (breakdown.useHandlingFee === undefined && parseFloat(breakdown.handlingRate) <= 0)) && 
