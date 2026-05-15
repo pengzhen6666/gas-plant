@@ -38,6 +38,7 @@ import { DataTable } from './components/tables/DataTable';
 import { SalesTable } from './components/tables/SalesTable';
 import { ExpandableMerchantRow } from './components/tables/ExpandableMerchantRow';
 import { EquipmentCatalog } from './components/tables/EquipmentCatalog';
+import { FuelCalculator } from './components/common/FuelCalculator';
 
 
 
@@ -718,6 +719,15 @@ function App() {
                   onDelete={(id: any) => requireAuth(() => deleteTransaction(id))} 
                 />
              </div>
+          )}
+          {activeTab === 'calculator' && (
+            <div className="animate-slide-up">
+              <header className="mb-10">
+                <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">价格趋势与分析</h1>
+                <p className="text-slate-400 text-sm mt-2 font-medium">实时核算燃料进货成本与利润预测，分析历史行情走势</p>
+              </header>
+              <FuelCalculator />
+            </div>
           )}
         </div>
       </main>
