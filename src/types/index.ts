@@ -21,7 +21,7 @@ export interface Sale {
   total_price: number;
   paid_amount: number;
   status: '已付款' | '未付款' | '部分付款';
-  payment_date?: string;
+  payment_date?: string | null;
   notes?: string;
   settlement_type?: SettlementType;
   assigned_equipment?: string;

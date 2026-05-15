@@ -8,10 +8,10 @@ interface Props {
   editData: any;
   prefillData: any;
   onClose: () => void;
-  onAddTransaction: (data: Partial<Transaction>) => void;
-  onAddSale: (data: Partial<Sale>) => void;
-  onUpdateTransaction: (id: string, data: Partial<Transaction>) => void;
-  onUpdateSale: (id: string, data: Partial<Sale>) => void;
+  onAddTransaction: (data: any) => void | Promise<void>;
+  onAddSale: (data: any) => void | Promise<void>;
+  onUpdateTransaction: (id: string, data: any) => void | Promise<void>;
+  onUpdateSale: (id: string, data: any) => void | Promise<void>;
 }
 
 export const useRecordModalLogic = ({ 

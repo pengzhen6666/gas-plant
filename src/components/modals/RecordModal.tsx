@@ -7,15 +7,15 @@ import { SalesEntrySection } from './RecordModal/SalesEntrySection';
 import { CommonFields } from './RecordModal/CommonFields';
 import { useRecordModalLogic } from './RecordModal/useRecordModalLogic';
 
-import type { RecordType, Transaction, Sale, SettlementType } from '../../types/index';
+import type { RecordType, Transaction, Sale } from '../../types/index';
 
 interface RecordModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddTransaction: (data: Partial<Transaction>) => void;
-  onAddSale: (data: Partial<Sale>) => void;
-  onUpdateTransaction: (id: string, data: Partial<Transaction>) => void;
-  onUpdateSale: (id: string, data: Partial<Sale>) => void;
+  onAddTransaction: (data: any) => void | Promise<void>;
+  onAddSale: (data: any) => void | Promise<void>;
+  onUpdateTransaction: (id: string, data: any) => void | Promise<void>;
+  onUpdateSale: (id: string, data: any) => void | Promise<void>;
   isSubmitting: boolean;
   editData: any;
   prefillData: any;
