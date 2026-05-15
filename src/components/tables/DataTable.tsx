@@ -6,6 +6,7 @@ import { STOVE_MANUFACTURERS } from '../../config/equipment';
 export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete }: any) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('全部');
+  const [selectedManufacturer, setSelectedManufacturer] = useState('全部');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -36,21 +37,21 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
         if (selectedCategory === '日常收入') return item.type === '收入';
         if (selectedCategory === '日常支出') return item.type === '支出';
         
-        if (filterType === '设备采购') {
-          return getMfr(item.title) === selectedCategory;
-        }
-
         const matchCategory = item.category === selectedCategory;
         const matchKeyword = (item.title && item.title.includes(selectedCategory));
         return matchCategory || matchKeyword;
       });
     }
 
+    if (selectedManufacturer !== '全部' && filterType === '设备采购') {
+      result = result.filter((item: any) => getMfr(item.title) === selectedManufacturer);
+    }
+
     if (startDate) result = result.filter((item: any) => item.date >= startDate);
     if (endDate) result = result.filter((item: any) => item.date <= endDate);
 
     return result;
-  }, [data, filterType, searchTerm, selectedCategory, startDate, endDate]);
+  }, [data, filterType, searchTerm, selectedCategory, selectedManufacturer, startDate, endDate]);
 
   const totalAmount = useMemo(() => {
     return filteredData.reduce((sum: number, item: any) => {
@@ -68,21 +69,24 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
     }, 0);
   }, [filteredData]);
 
-  const categories = useMemo(() => {
-    if (filterType === '设备采购') {
-      const uniqueMfrs = new Set<string>();
-      data.forEach((item: any) => {
-        if (item.type === '设备采购') {
-          uniqueMfrs.add(getMfr(item.title));
-        }
-      });
-      const sorted = Array.from(uniqueMfrs).filter(m => m !== '其他').sort();
-      if (uniqueMfrs.has('其他')) sorted.push('其他');
-      return ['全部', ...sorted];
-    }
+  const mfrCategories = useMemo(() => {
+    if (filterType !== '设备采购') return null;
+    const uniqueMfrs = new Set<string>();
+    data.forEach((item: any) => {
+      if (item.type === '设备采购') {
+        uniqueMfrs.add(getMfr(item.title));
+      }
+    });
+    const sorted = Array.from(uniqueMfrs).filter(m => m !== '其他').sort();
+    if (uniqueMfrs.has('其他')) sorted.push('其他');
+    return ['全部', ...sorted];
+  }, [data, filterType]);
+
+  const productCategories = useMemo(() => {
+    if (filterType === '设备采购') return ['全部', '炉灶', '油箱', '煲仔炉', '汤炉', '蒸柜', '运费', '其他配件'];
     if (filterType === '燃油采购') return null;
     return ['全部', '燃油', '油箱', '炉灶', '煲仔炉', '汤炉', '蒸柜', '运费', '其他配件', '日常收入', '日常支出'];
-  }, [data, filterType]);
+  }, [filterType]);
 
   const parseBreakdown = (notes: string) => {
     if (!notes || !notes.includes('BREAKDOWN:')) return null;
@@ -167,23 +171,45 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
         </div>
       </div>
 
-      {categories && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`whitespace-nowrap px-4 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase transition-all ${
-                selectedCategory === cat 
-                ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20 scale-105' 
-                : 'bg-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-300'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="space-y-3 mb-6">
+        {productCategories && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+            <span className="text-[9px] text-slate-600 font-bold uppercase tracking-wider whitespace-nowrap mr-1">分类:</span>
+            {productCategories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`whitespace-nowrap px-3 py-1 rounded-lg text-[9px] font-black tracking-widest uppercase transition-all ${
+                  selectedCategory === cat 
+                  ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' 
+                  : 'bg-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-300'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {mfrCategories && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+            <span className="text-[9px] text-slate-600 font-bold uppercase tracking-wider whitespace-nowrap mr-1">厂家:</span>
+            {mfrCategories.map(mfr => (
+              <button
+                key={mfr}
+                onClick={() => setSelectedManufacturer(mfr)}
+                className={`whitespace-nowrap px-3 py-1 rounded-lg text-[9px] font-black tracking-widest uppercase transition-all ${
+                  selectedManufacturer === mfr 
+                  ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' 
+                  : 'bg-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-300'
+                }`}
+              >
+                {mfr}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className={`grid ${totalQty > 0 ? 'grid-cols-2' : 'grid-cols-1'} gap-4 mb-8 animate-in fade-in slide-in-from-top-2 duration-300`}>
          <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
