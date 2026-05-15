@@ -12,11 +12,23 @@ export const EquipmentPurchaseSection: React.FC<Props> = ({
   formData, setFormData, equipmentCatalog, parseEquipName
 }) => {
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
+  const [selectedManufacturer, setSelectedManufacturer] = React.useState<string | null>(null);
+
+  const manufacturers = React.useMemo(() => {
+    const list = equipmentCatalog.map(item => parseEquipName(item.name).mfr);
+    return Array.from(new Set(list)).sort();
+  }, [equipmentCatalog]);
 
   const filteredCatalog = React.useMemo(() => {
-    if (!selectedCategory) return equipmentCatalog;
-    return equipmentCatalog.filter(item => parseEquipName(item.name).category === selectedCategory);
-  }, [equipmentCatalog, selectedCategory]);
+    let result = equipmentCatalog;
+    if (selectedCategory) {
+      result = result.filter(item => parseEquipName(item.name).category === selectedCategory);
+    }
+    if (selectedManufacturer) {
+      result = result.filter(item => parseEquipName(item.name).mfr === selectedManufacturer);
+    }
+    return result;
+  }, [equipmentCatalog, selectedCategory, selectedManufacturer]);
 
   return (
     <div className="space-y-5">
@@ -24,24 +36,48 @@ export const EquipmentPurchaseSection: React.FC<Props> = ({
         <label className="text-sm text-slate-400">摘要内容 (型号/名称)</label>
         {equipmentCatalog && equipmentCatalog.length > 0 && (
           <div className="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
-            <div className="flex flex-wrap gap-1.5 pb-2 border-b border-white/5">
-              <button
-                type="button"
-                onClick={() => setSelectedCategory(null)}
-                className={`px-2 py-1 text-[9px] font-bold rounded transition-all border ${!selectedCategory ? 'bg-brand-primary text-white border-brand-primary' : 'bg-white/5 text-slate-500 border-white/5'}`}
-              >
-                全部
-              </button>
-              {CATEGORIES.map(cat => (
+            <div className="flex flex-col gap-2 pb-2 border-b border-white/5">
+              <div className="flex flex-wrap gap-1.5">
+                <span className="text-[9px] text-slate-500 font-bold self-center mr-1">品类:</span>
                 <button
-                  key={cat}
                   type="button"
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-2 py-1 text-[9px] font-bold rounded transition-all border ${selectedCategory === cat ? 'bg-brand-primary text-white border-brand-primary' : 'bg-white/5 text-slate-500 border-white/5'}`}
+                  onClick={() => setSelectedCategory(null)}
+                  className={`px-2 py-1 text-[9px] font-bold rounded transition-all border ${!selectedCategory ? 'bg-brand-primary text-white border-brand-primary' : 'bg-white/5 text-slate-500 border-white/5'}`}
                 >
-                  {cat}
+                  全部
                 </button>
-              ))}
+                {CATEGORIES.map(cat => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-2 py-1 text-[9px] font-bold rounded transition-all border ${selectedCategory === cat ? 'bg-brand-primary text-white border-brand-primary' : 'bg-white/5 text-slate-500 border-white/5'}`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="flex flex-wrap gap-1.5">
+                <span className="text-[9px] text-slate-500 font-bold self-center mr-1">厂家:</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedManufacturer(null)}
+                  className={`px-2 py-1 text-[9px] font-bold rounded transition-all border ${!selectedManufacturer ? 'bg-brand-primary text-white border-brand-primary' : 'bg-white/5 text-slate-500 border-white/5'}`}
+                >
+                  全部
+                </button>
+                {manufacturers.map(mfr => (
+                  <button
+                    key={mfr}
+                    type="button"
+                    onClick={() => setSelectedManufacturer(mfr)}
+                    className={`px-2 py-1 text-[9px] font-bold rounded transition-all border ${selectedManufacturer === mfr ? 'bg-brand-primary text-white border-brand-primary' : 'bg-white/5 text-slate-500 border-white/5'}`}
+                  >
+                    {mfr}
+                  </button>
+                ))}
+              </div>
             </div>
             
             <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">

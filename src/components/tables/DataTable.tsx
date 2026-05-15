@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Loader2, ArrowUpRight, ArrowDownRight, Edit2, Trash2, X } from 'lucide-react';
 import { formatQty } from '../../utils/index';
+import { STOVE_MANUFACTURERS } from '../../config/equipment';
 
 export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete }: any) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -8,6 +9,16 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const getMfr = (title: string) => {
+    const known = STOVE_MANUFACTURERS.find(m => title.includes(m));
+    if (known) return known;
+    // Special case for common prefixes if not in list
+    if (title.startsWith('佛山') || title.startsWith('山东') || title.startsWith('广东') || title.startsWith('湖北')) {
+      return title.split(' ')[0];
+    }
+    return '其他';
+  };
 
   const filteredData = useMemo(() => {
     let result = filterType ? data.filter((d: any) => d.type === filterType) : data;
@@ -24,6 +35,11 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
         if (selectedCategory === '燃油') return item.type === '燃油采购';
         if (selectedCategory === '日常收入') return item.type === '收入';
         if (selectedCategory === '日常支出') return item.type === '支出';
+        
+        if (filterType === '设备采购') {
+          return getMfr(item.title) === selectedCategory;
+        }
+
         const matchCategory = item.category === selectedCategory;
         const matchKeyword = (item.title && item.title.includes(selectedCategory));
         return matchCategory || matchKeyword;
@@ -53,10 +69,20 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
   }, [filteredData]);
 
   const categories = useMemo(() => {
-    if (filterType === '设备采购') return ['全部', '油箱', '炉灶', '煲仔炉', '汤炉', '蒸柜', '运费', '其他配件'];
+    if (filterType === '设备采购') {
+      const uniqueMfrs = new Set<string>();
+      data.forEach((item: any) => {
+        if (item.type === '设备采购') {
+          uniqueMfrs.add(getMfr(item.title));
+        }
+      });
+      const sorted = Array.from(uniqueMfrs).filter(m => m !== '其他').sort();
+      if (uniqueMfrs.has('其他')) sorted.push('其他');
+      return ['全部', ...sorted];
+    }
     if (filterType === '燃油采购') return null;
     return ['全部', '燃油', '油箱', '炉灶', '煲仔炉', '汤炉', '蒸柜', '运费', '其他配件', '日常收入', '日常支出'];
-  }, [filterType]);
+  }, [data, filterType]);
 
   const parseBreakdown = (notes: string) => {
     if (!notes || !notes.includes('BREAKDOWN:')) return null;

@@ -77,17 +77,22 @@ export const EquipmentCatalog = ({
   };
 
   const buildFullName = (cat: string, mfr: string, type: string, note: string, dim: string, burner: string, basin: string, silent: boolean, handle: boolean, flameout: boolean, deductTopSpace: boolean, cDim?: string, cBurner?: string) => {
-    let details = [];
-    if (type === '其他型号') {
-      if (note) details.push(note);
-    } else {
-      if (type) details.push(type);
-      if (note) details.push(note);
+    let details: string[] = [];
+    
+    const finalDim = (dim === '其他尺寸' && cDim) ? cDim : dim;
+    const finalType = type === '其他型号' ? '' : type;
+
+    // Add type if it's not empty and not identical to dimensions
+    if (finalType && finalType !== finalDim) {
+      details.push(finalType);
     }
-    if (dim) {
-      if (dim === '其他尺寸' && cDim) details.push(cDim);
-      else details.push(dim);
+    
+    if (note) details.push(note);
+    
+    if (finalDim) {
+      details.push(finalDim);
     }
+
     if (burner && burner !== '常规') {
       const bValue = (burner === '其他炉头' && cBurner) ? cBurner : burner;
       details.push(bValue + (bValue.endsWith('眼') || bValue.endsWith('头') ? '' : '头'));
@@ -96,6 +101,8 @@ export const EquipmentCatalog = ({
     if (silent) details.push('静音');
     if (handle) details.push('手柄开关');
     if (flameout) details.push('拉锅熄火');
+    
+    // For oil tanks, specify if it's full capacity
     if (cat === '油箱' && !deductTopSpace) details.push('满装');
     
     const itemName = details.length > 0 ? details.join('/') : '常规型号';
