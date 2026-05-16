@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Calculator, X, RotateCcw, Info, ArrowRightLeft, Save } from 'lucide-react';
 import { DetailInput } from './FuelCalculatorComponents';
 
@@ -19,13 +20,23 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
   actions,
   children
 }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[2000] overflow-auto bg-black/80 backdrop-blur-sm">
-      <div className="flex items-start justify-center min-h-screen w-full p-4 md:p-8 pt-6 md:pt-16 pb-24 md:pb-40">
-        <div className="absolute inset-0 z-0" onClick={onClose} />
-        <div className="glass-card relative w-full max-w-none bg-[#080808] border-white/10 shadow-2xl flex flex-col md:rounded-[3rem] z-10 animate-in fade-in zoom-in-95 duration-300">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-0 md:p-8 overflow-hidden">
+      <div className="absolute inset-0 bg-black/90 backdrop-blur-2xl" onClick={onClose} />
+      <div className="glass-card relative w-full h-full md:h-auto md:max-w-6xl bg-[#080808] border-white/10 shadow-2xl overflow-hidden flex flex-col md:max-h-[95vh] animate-in zoom-in-95 duration-300 md:rounded-[2.5rem] z-50">
         {/* Modal Header */}
         <div className="px-4 md:px-8 py-4 md:py-6 border-b border-white/5 flex items-center justify-between sticky top-0 bg-[#080808]/80 backdrop-blur-xl z-30">
           <div className="flex items-center gap-3 md:gap-4">
@@ -55,10 +66,10 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
           </div>
         </div>
 
-        <div className="p-4 md:p-8 space-y-6 md:space-y-10">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-start">
-            {/* 步骤 1：基础参数 */}
-            <div className="md:col-span-4 space-y-4">
+        <div className="p-4 md:p-8 overflow-y-auto space-y-6 md:space-y-10">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
+            {/* Step 1: Base Parameters */}
+            <div className="xl:col-span-4 space-y-4">
               <p className="text-[11px] font-black text-emerald-400 uppercase tracking-[0.3em] flex items-center gap-3">
                 <span className="w-5 h-5 rounded-lg bg-emerald-400/20 flex items-center justify-center text-[10px]">1</span>
                 基础参数与厂家报价
@@ -239,44 +250,17 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
               </div>
             </div>
 
-            {/* 步骤 2：成本核算 */}
-            <div className="md:col-span-5 space-y-4">
+            {/* Step 2: Cost Calculation */}
+            <div className="xl:col-span-5 space-y-4">
               <p className="text-[11px] font-black text-brand-primary uppercase tracking-[0.3em] flex items-center gap-3">
                 <span className="w-5 h-5 rounded-lg bg-brand-primary/20 flex items-center justify-center text-[10px]">2</span>
                 进货成本核算
               </p>
               <div className="bg-white/[0.02] border border-white/5 p-6 rounded-[2rem] space-y-8">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest">货款金额</label>
-                    <input
-                      type="number"
-                      value={states.totalCost}
-                      onChange={(e) => actions.setTotalCost(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white font-black text-sm focus:outline-none focus:border-brand-primary/50 transition-all"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest">运费</label>
-                    <input
-                      type="number"
-                      value={states.shippingFee}
-                      onChange={(e) => actions.setShippingFee(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white font-black text-sm focus:outline-none focus:border-brand-primary/50 transition-all"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest">包装/杂费</label>
-                    <input
-                      type="number"
-                      value={states.packagingFee}
-                      onChange={(e) => actions.setPackagingFee(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white font-black text-sm focus:outline-none focus:border-brand-primary/50 transition-all"
-                      placeholder="0.00"
-                    />
-                  </div>
+                <div className="grid grid-cols-3 gap-6">
+                  <DetailInput label="货款金额" value={states.totalCost} onChange={actions.setTotalCost} />
+                  <DetailInput label="运费" value={states.shippingFee} onChange={actions.setShippingFee} />
+                  <DetailInput label="包装/杂费" value={states.packagingFee} onChange={actions.setPackagingFee} />
                 </div>
 
                 <div className="space-y-3">
@@ -342,8 +326,8 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
               </div>
             </div>
 
-            {/* 步骤 3：售价配置 */}
-            <div className="md:col-span-3 space-y-4">
+            {/* Step 3: Selling Price Configuration */}
+            <div className="xl:col-span-3 space-y-4">
               <p className="text-[11px] font-black text-amber-400 uppercase tracking-[0.3em] flex items-center gap-3">
                 <span className="w-5 h-5 rounded-lg bg-amber-400/20 flex items-center justify-center text-[10px]">3</span>
                 期望利润配置
@@ -374,11 +358,11 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
             </div>
           </div>
 
-          {/* 利润可视化区域 */}
+          {/* Profit Visualization Section */}
           {children}
         </div>
-        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
