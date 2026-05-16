@@ -12,11 +12,15 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const getMfr = (title: string) => {
-    const known = STOVE_MANUFACTURERS.find(m => title.includes(m));
+    if (!title) return '其他';
+    // Remove "运费：" prefix if present
+    const cleanTitle = title.replace(/^运费[:：]\s*/, '').replace(/\s*运费$/, '');
+    const known = STOVE_MANUFACTURERS.find(m => cleanTitle.includes(m));
     if (known) return known;
-    // Special case for common prefixes if not in list
-    if (title.startsWith('佛山') || title.startsWith('山东') || title.startsWith('广东') || title.startsWith('湖北')) {
-      return title.split(' ')[0];
+    
+    // Special case for common prefixes
+    if (cleanTitle.startsWith('佛山') || cleanTitle.startsWith('山东') || cleanTitle.startsWith('广东') || cleanTitle.startsWith('湖北')) {
+      return cleanTitle.split(' ')[0].split(/[/\s-]/)[0];
     }
     return '其他';
   };
@@ -95,6 +99,106 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
     } catch (e) {
       return null;
     }
+  };
+
+  // --- Smart Batching Logic ---
+  const batchFreightData = useMemo(() => {
+    const batches: Record<string, { totalFreight: number, itemCount: number, freightRecordIds: string[] }> = {};
+    const itemToBatchMap: Record<string, string> = {}; // item.id -> batchKey
+
+    // 1. Identify all freight records
+    const freights = filteredData.filter((item: any) => 
+      item.category === '运费' || (item.type === '支出' && item.title.includes('运费'))
+    );
+
+    // 2. Identify all equipment items
+    const equipmentItems = filteredData.filter((item: any) => 
+      item.type === '设备采购' || item.type === '燃油采购'
+    );
+
+    // 3. Match freights to items
+    freights.forEach((f: any) => {
+      const fMfr = getMfr(f.title);
+      const fDate = new Date(f.date);
+      
+      // Look for items that match this freight
+      equipmentItems.forEach((e: any) => {
+        const eMfr = getMfr(e.title);
+        const eDate = new Date(e.date);
+        const diffDays = Math.abs((fDate.getTime() - eDate.getTime()) / (1000 * 3600 * 24));
+        const sameDay = f.date === e.date;
+        
+        // 1. Same Day + Mfr match
+        const mfrMatch = fMfr !== '其他' && fMfr === eMfr && sameDay;
+        
+        // 2. Note-based match (Strict for cross-date)
+        let noteMatch = false;
+        if (f.notes) {
+          const fNotes = f.notes.toLowerCase();
+          const eTitle = e.title.toLowerCase();
+          const eMfrLower = eMfr.toLowerCase();
+          
+          if (sameDay) {
+            noteMatch = fNotes.includes(eMfrLower);
+          } else if (diffDays <= 5) { // Only allow up to 5 days for cross-date COD
+            // For cross-date, we need Manufacturer AND a specific product word (not just mfr)
+            const productPart = eTitle.replace(eMfrLower, '').trim();
+            const productWords = productPart.split(/[\s/／-]/).filter(w => w.length >= 2);
+            const hasProductWord = productWords.some(w => fNotes.includes(w));
+            noteMatch = fNotes.includes(eMfrLower) && hasProductWord;
+          }
+        }
+
+        if (mfrMatch || noteMatch) {
+          const batchKey = f.id; 
+          if (!batches[batchKey]) {
+            batches[batchKey] = { totalFreight: Number(f.amount), itemCount: 0, freightRecordIds: [f.id] };
+          }
+          batches[batchKey].itemCount += 1;
+          itemToBatchMap[e.id] = batchKey;
+        }
+      });
+    });
+
+    // 4. Handle internal shipping fees (entered in modal)
+    equipmentItems.forEach((e: any) => {
+      if (itemToBatchMap[e.id]) return; // Already linked to a separate freight record
+      
+      const bd = parseBreakdown(e.notes || '');
+      if (bd && bd.shippingFee && parseFloat(bd.shippingFee) > 0) {
+        const mfr = getMfr(e.title);
+        const batchKey = `internal_${e.date}_${mfr}`;
+        if (!batches[batchKey]) {
+          batches[batchKey] = { totalFreight: 0, itemCount: 0, freightRecordIds: [] };
+        }
+        batches[batchKey].itemCount += 1;
+        batches[batchKey].totalFreight += parseFloat(bd.shippingFee);
+        itemToBatchMap[e.id] = batchKey;
+      }
+    });
+
+    return { batches, itemToBatchMap };
+  }, [filteredData]);
+
+  const getAmortizedFreight = (item: any) => {
+    const batchKey = batchFreightData.itemToBatchMap[item.id];
+    if (!batchKey) return 0;
+    
+    const batch = batchFreightData.batches[batchKey];
+    if (batch && batch.itemCount > 0 && batch.totalFreight > 0) {
+      return batch.totalFreight / batch.itemCount;
+    }
+    return 0;
+  };
+
+  const getBatchSummary = (item: any) => {
+    const batchKey = batchFreightData.itemToBatchMap[item.id];
+    if (!batchKey) return 0;
+    const batch = batchFreightData.batches[batchKey];
+    if (batch && batch.totalFreight > 0 && batch.itemCount > 1) {
+      return batch.totalFreight;
+    }
+    return 0;
   };
 
   return (
@@ -240,18 +344,29 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
         <table className="w-full text-white">
           <thead className="text-slate-400 text-sm border-b border-white/5">
             <tr>
-              <th className="pb-4 text-left">日期</th>
-              <th className="pb-4 text-left">内容</th>
-              <th className="pb-4 text-right">数量</th>
-              <th className="pb-4 text-left px-4">备注说明</th>
-              <th className="pb-4 text-right">金额</th>
-              <th className="pb-4 text-right">操作</th>
+              <th className="pb-4 text-left font-bold">日期</th>
+              <th className="pb-4 text-left font-bold">内容</th>
+              <th className="pb-4 text-right font-bold">数量</th>
+              <th className="pb-4 text-right font-bold px-4">单价</th>
+              <th className="pb-4 text-right font-bold text-brand-primary">运费</th>
+              <th className="pb-4 text-left px-4 font-bold">备注</th>
+              <th className="pb-4 text-right font-bold">合计</th>
+              <th className="pb-4 text-right font-bold">操作</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {filteredData.map((item: any) => {
+            {filteredData.filter((item: any) => {
+              // Hide individual freight records if they are part of a batch
+              const isFreight = item.category === '运费' || (item.type === '支出' && item.title.includes('运费'));
+              if (!isFreight) return true;
+              
+              // Only hide if it's been linked to at least one equipment item
+              const isLinked = Object.values(batchFreightData.batches).some(b => b.freightRecordIds.includes(item.id) && b.itemCount > 0);
+              return !isLinked;
+            }).map((item: any) => {
               const breakdown = parseBreakdown(item.notes || '');
               const isExpanded = expandedId === item.id;
+              const individualFreight = item.shipping_fee || (breakdown?.shippingFee ? parseFloat(breakdown.shippingFee) : getAmortizedFreight(item));
               
               return (
                 <React.Fragment key={item.id}>
@@ -295,12 +410,38 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
                          )}
                        </div>
                     </td>
-                    <td className="py-4 px-4 text-slate-500 text-xs max-w-[200px] truncate" title={item.notes?.split('BREAKDOWN:')[0]}>
+                    <td className="py-4 text-right text-slate-400 text-sm font-mono whitespace-nowrap px-4">
+                       <div className="flex flex-col items-end">
+                         <span>¥ {(Number(item.amount) / (parseFloat(item.quantity) || 1)).toLocaleString(undefined, {minimumFractionDigits: 1})}</span>
+                         {item.type === '燃油采购' && breakdown && breakdown.barrelCost && (
+                           <span className="text-[10px] text-slate-500 font-bold mt-0.5">
+                             桶: ¥{parseFloat(breakdown.barrelCost).toFixed(0)}/个
+                           </span>
+                         )}
+                       </div>
+                    </td>
+                    <td className="py-4 text-right whitespace-nowrap">
+                       {(individualFreight > 0) ? (
+                         <div className="flex flex-col items-end">
+                           <span className="text-sm font-bold text-brand-primary">
+                             ¥ {individualFreight.toLocaleString()}
+                           </span>
+                           {getBatchSummary(item) > 0 && !item.shipping_fee && (
+                             <span className="text-[7px] text-slate-600 font-bold uppercase tracking-widest">
+                               批次总 ¥{getBatchSummary(item).toFixed(0)}
+                             </span>
+                           )}
+                         </div>
+                       ) : (
+                         <span className="text-slate-700">-</span>
+                       )}
+                    </td>
+                    <td className="py-4 px-4 text-slate-500 text-xs max-w-[150px] truncate" title={item.notes?.split('BREAKDOWN:')[0]}>
                       {item.notes?.split('BREAKDOWN:')[0] || '-'}
                     </td>
-                    <td className="py-4 text-right font-bold whitespace-nowrap">
-                       <span className={item.type === '销售录入' ? 'text-blue-400' : ''}>
-                         ¥ {Number(item.amount).toLocaleString()}
+                    <td className="py-4 text-right whitespace-nowrap font-black">
+                       <span className={item.type === '销售录入' ? 'text-blue-400' : 'text-white'}>
+                         ¥ {(Number(item.amount) + individualFreight).toLocaleString()}
                        </span>
                     </td>
                     <td className="py-4 text-right">
@@ -312,69 +453,120 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
                   </tr>
                   {isExpanded && breakdown && (
                     <tr>
-                      <td colSpan={6} className="bg-black/40 p-0 border-l-2 border-brand-primary">
-                        <div className="p-6 grid grid-cols-3 gap-8 animate-in slide-in-from-top-2 duration-300">
-                          <div className="space-y-2">
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">基础物料成本</p>
-                            <div className="flex justify-between items-end border-b border-white/5 pb-2">
-                              <div className="flex flex-col">
-                                <span className="text-xs text-slate-300">{item.title} (¥{breakdown.oilBasePrice}/吨)</span>
-                                <span className="text-[10px] text-slate-500">
-                                  {breakdown.barrelCount}桶 × 1000L × 密度{breakdown.density || '0.85'}
-                                </span>
-                              </div>
-                              <span className="text-sm font-bold text-white">¥{((parseFloat(item.quantity) / 1000) * parseFloat(breakdown.oilBasePrice)).toFixed(2).replace(/\.?0+$/, '')}</span>
-                            </div>
-                            <div className="flex justify-between items-end border-b border-white/5 pb-2">
-                              <span className="text-xs text-slate-300">吨桶费 (¥{breakdown.barrelCost} × {breakdown.barrelCount}个)</span>
-                              <span className="text-sm font-bold text-white">¥{(parseFloat(breakdown.barrelCost) * parseFloat(breakdown.barrelCount)).toFixed(2).replace(/\.?0+$/, '')}</span>
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">附加服务费用</p>
-                            {breakdown.useHandlingFee !== false && (breakdown.useHandlingFee || (breakdown.handlingFeeMode === 'fixed' ? parseFloat(breakdown.handlingFeeFixed) > 0 : parseFloat(breakdown.handlingRate) > 0)) && (
+                      <td colSpan={8} className="bg-black/40 p-0 border-l-2 border-brand-primary">
+                        {item.type === '燃油采购' ? (
+                          <div className="p-6 grid grid-cols-3 gap-8 animate-in slide-in-from-top-2 duration-300">
+                            <div className="space-y-2">
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">基础物料成本</p>
                               <div className="flex justify-between items-end border-b border-white/5 pb-2">
-                                <span className="text-xs text-slate-300">
-                                  手续费 {breakdown.handlingFeeMode === 'fixed' ? '(固定金额)' : `(${breakdown.handlingRate}%)`}
-                                </span>
-                                <span className="text-sm font-bold text-white">
-                                  ¥{breakdown.handlingFeeMode === 'fixed' 
-                                    ? parseFloat(breakdown.handlingFeeFixed || 0).toFixed(2).replace(/\.?0+$/, '')
-                                    : ((parseFloat(item.quantity) / 1000) * parseFloat(breakdown.oilBasePrice) * (parseFloat(breakdown.handlingRate || 0) / 100)).toFixed(2).replace(/\.?0+$/, '')}
-                                </span>
+                                <div className="flex flex-col">
+                                  <span className="text-xs text-slate-300">{item.title} (¥{breakdown.oilBasePrice}/吨)</span>
+                                  <span className="text-[10px] text-slate-500">
+                                    {breakdown.barrelCount}桶 × 1000L × 密度{breakdown.density || '0.85'}
+                                  </span>
+                                </div>
+                                <span className="text-sm font-bold text-white">¥{((parseFloat(item.quantity) / 1000) * parseFloat(breakdown.oilBasePrice)).toFixed(2).replace(/\.?0+$/, '')}</span>
                               </div>
-                            )}
-                            {breakdown.useTaxFee !== false && (breakdown.useTaxFee || (breakdown.taxFeeMode === 'fixed' ? parseFloat(breakdown.taxFeeFixed) > 0 : parseFloat(breakdown.taxRate) > 0)) && (
                               <div className="flex justify-between items-end border-b border-white/5 pb-2">
-                                <span className="text-xs text-slate-300">
-                                  开票费 {breakdown.taxFeeMode === 'fixed' ? '(固定金额)' : `(${breakdown.taxRate}%)`}
-                                </span>
-                                <span className="text-sm font-bold text-white">
-                                  ¥{breakdown.taxFeeMode === 'fixed' 
-                                    ? parseFloat(breakdown.taxFeeFixed || 0).toFixed(2).replace(/\.?0+$/, '')
-                                    : ((parseFloat(item.quantity) / 1000) * parseFloat(breakdown.oilBasePrice) * (parseFloat(breakdown.taxRate || 0) / 100)).toFixed(2).replace(/\.?0+$/, '')}
-                                </span>
+                                <span className="text-xs text-slate-300">吨桶费 (¥{breakdown.barrelCost} × {breakdown.barrelCount}个)</span>
+                                <span className="text-sm font-bold text-white">¥{(parseFloat(breakdown.barrelCost) * parseFloat(breakdown.barrelCount)).toFixed(2).replace(/\.?0+$/, '')}</span>
                               </div>
-                            )}
-                            {(breakdown.useHandlingFee === false || (breakdown.useHandlingFee === undefined && parseFloat(breakdown.handlingRate) <= 0)) && 
-                             (breakdown.useTaxFee === false || (breakdown.useTaxFee === undefined && parseFloat(breakdown.taxRate) <= 0)) && (
-                              <div className="text-xs text-slate-600 italic py-2">无额外服务费</div>
-                            )}
-                          </div>
+                            </div>
 
-                          <div className="space-y-2">
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">物流转运成本</p>
-                            <div className="flex justify-between items-end border-b border-white/5 pb-2">
-                              <span className="text-xs text-slate-300">物流运费 (按吨计)</span>
-                              <span className="text-sm font-bold text-white">¥{breakdown.shippingFee}</span>
+                            <div className="space-y-2">
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">附加服务费用</p>
+                              {(() => {
+                                const oilTotal = breakdown.priceUnit === 'barrel' 
+                                  ? (parseFloat(breakdown.barrelCount) * parseFloat(breakdown.oilBasePrice))
+                                  : ((parseFloat(item.quantity) / 1000) * parseFloat(breakdown.oilBasePrice));
+                                
+                                const showHandling = breakdown.useHandlingFee !== false && (breakdown.useHandlingFee || (breakdown.handlingFeeMode === 'fixed' ? parseFloat(breakdown.handlingFeeFixed) > 0 : parseFloat(breakdown.handlingRate) > 0));
+                                const showTax = breakdown.useTaxFee !== false && (breakdown.useTaxFee || (breakdown.taxFeeMode === 'fixed' ? parseFloat(breakdown.taxFeeFixed) > 0 : parseFloat(breakdown.taxRate) > 0));
+                                
+                                return (
+                                  <>
+                                    {showHandling && (
+                                      <div className="flex justify-between items-end border-b border-white/5 pb-2">
+                                        <span className="text-xs text-slate-300">
+                                          手续费 {breakdown.handlingFeeMode === 'fixed' ? '(固定金额)' : `(${breakdown.handlingRate}%)`}
+                                        </span>
+                                        <span className="text-sm font-bold text-white">
+                                          ¥{breakdown.handlingFeeMode === 'fixed' 
+                                            ? parseFloat(breakdown.handlingFeeFixed || 0).toFixed(2).replace(/\.?0+$/, '')
+                                            : (oilTotal * (parseFloat(breakdown.handlingRate) / 100)).toFixed(2).replace(/\.?0+$/, '')}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {showTax && (
+                                      <div className="flex justify-between items-end border-b border-white/5 pb-2">
+                                        <span className="text-xs text-slate-300">
+                                          开票费 {breakdown.taxFeeMode === 'fixed' ? '(固定金额)' : `(${breakdown.taxRate}%)`}
+                                        </span>
+                                        <span className="text-sm font-bold text-white">
+                                          ¥{breakdown.taxFeeMode === 'fixed' 
+                                            ? parseFloat(breakdown.taxFeeFixed || 0).toFixed(2).replace(/\.?0+$/, '')
+                                            : (oilTotal * (parseFloat(breakdown.taxRate) / 100)).toFixed(2).replace(/\.?0+$/, '')}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {!showHandling && !showTax && (
+                                      <p className="text-[10px] text-slate-600 italic">无附加费用</p>
+                                    )}
+                                  </>
+                                );
+                              })()}
                             </div>
-                            <div className="pt-2 flex justify-between items-center">
-                              <span className="text-[10px] text-brand-primary font-black uppercase">总支出核算</span>
-                              <span className="text-lg font-black text-brand-primary">¥{Number(item.amount).toLocaleString()}</span>
+
+                            <div className="space-y-2">
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">物流转运成本</p>
+                              <div className="flex justify-between items-end border-b border-white/5 pb-2">
+                                <span className="text-xs text-slate-300">物流运费 (按吨计)</span>
+                                <span className="text-sm font-bold text-white">¥{parseFloat(breakdown.shippingFee || 0).toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between items-center pt-4 border-t border-white/10 mt-2">
+                                <span className="text-sm font-bold text-brand-primary">合计支出</span>
+                                <span className="text-lg font-black text-white">¥{(Number(item.amount) + individualFreight).toLocaleString()}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        ) : (
+                          <div className="p-6 grid grid-cols-3 gap-8 animate-in slide-in-from-top-2 duration-300">
+                            <div className="space-y-2">
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">设备采购明细</p>
+                              <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                                <span className="text-slate-400">货款单价 (¥/{item.unit || '个'})</span>
+                                <span className="font-mono text-white">¥{(Number(item.amount) / (parseFloat(item.quantity) || 1)).toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-sm pt-2">
+                                <span className="text-slate-400">采购数量</span>
+                                <span className="font-mono text-white">{item.quantity} {item.unit || '个'}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">备注说明</p>
+                              <p className="text-xs text-slate-400 leading-relaxed italic">
+                                {item.notes?.split('BREAKDOWN:')[0] || '暂无详细备注'}
+                              </p>
+                            </div>
+
+                            <div className="space-y-2">
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">成本构成汇总</p>
+                              <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                                <span className="text-slate-400">基础货款</span>
+                                <span className="font-mono text-white">¥{Number(item.amount).toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-sm pt-2 border-b border-white/5 pb-2">
+                                <span className="text-slate-400">物流运费</span>
+                                <span className="font-mono text-brand-primary">¥{individualFreight.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between items-center pt-4">
+                                <span className="text-sm font-bold text-white">最终采购成本</span>
+                                <span className="text-lg font-black text-brand-primary">¥{(Number(item.amount) + individualFreight).toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   )}
@@ -383,7 +575,7 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
             })}
             {filteredData.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-20 text-center text-slate-600 italic">暂无进货记录</td>
+                <td colSpan={8} className="py-20 text-center text-slate-600 italic">暂无进货记录</td>
               </tr>
             )}
           </tbody>
@@ -408,9 +600,37 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
               </div>
               <div className="text-right">
                 <div className={`text-base font-black ${item.type === '销售录入' ? 'text-blue-400' : 'text-white'}`}>
-                  ¥ {Number(item.amount).toLocaleString()}
+                  ¥ {(Number(item.amount) + (item.shipping_fee || (parseBreakdown(item.notes)?.shippingFee ? parseFloat(parseBreakdown(item.notes).shippingFee) : getAmortizedFreight(item)))).toLocaleString()}
                 </div>
                 <div className="text-[10px] text-slate-500">{formatQty(item.quantity)}</div>
+                {(() => {
+                  const bd = parseBreakdown(item.notes || '');
+                  const smartF = getAmortizedFreight(item);
+                  
+                  if (smartF > 0 || (bd && bd.shippingFee && parseFloat(bd.shippingFee) > 0)) {
+                    return (
+                      <div className="text-[10px] text-slate-500 font-medium mt-1">
+                        {smartF > 0 ? (
+                          <span className="flex items-center gap-1 justify-end">
+                            <span className="text-[7px] bg-brand-primary/10 text-brand-primary px-1 rounded uppercase mr-1">批次</span>
+                            ¥{(Number(item.amount)/(parseFloat(item.quantity)||1)).toFixed(1)} 
+                            <span className="text-slate-600 text-[8px]">+</span> 
+                            <span className="text-brand-primary/80">¥{smartF.toFixed(1)}运费</span>
+                          </span>
+                        ) : bd?.distributeShipping ? (
+                          <span className="flex items-center gap-1 justify-end">
+                            ¥{(Number(item.amount)/parseFloat(item.quantity)).toFixed(1)} 
+                            <span className="text-slate-600 text-[8px]">+</span> 
+                            <span className="text-brand-primary/80">¥{(parseFloat(bd.shippingFee)/parseFloat(item.quantity)).toFixed(1)}运费</span>
+                          </span>
+                        ) : (
+                          <span>含批次运费 ¥{bd?.shippingFee}</span>
+                        )}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             </div>
             
@@ -443,3 +663,5 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
     </div>
   );
 };
+
+export default DataTable;

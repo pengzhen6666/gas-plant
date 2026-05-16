@@ -10,6 +10,7 @@ export interface Transaction {
   quantity?: string;
   notes?: string;
   category?: string;
+  shipping_fee?: number;
 }
 
 export interface Sale {

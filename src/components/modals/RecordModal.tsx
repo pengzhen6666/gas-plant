@@ -115,6 +115,7 @@ export const RecordModal = ({
               formData={formData} setFormData={setFormData}
               inputUnit={inputUnit} toggleUnit={toggleUnit}
               purchaseDetails={purchaseDetails}
+              setPurchaseDetails={setPurchaseDetails}
             />
           </div>
 

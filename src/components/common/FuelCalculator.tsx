@@ -17,6 +17,9 @@ export const FuelCalculator: React.FC = () => {
           fuelTypes={states.fuelTypes}
           isLoading={states.isLoading}
           unitType={states.unitType}
+          sellingPrice={states.sellingPrice}
+          setSellingPrice={actions.setSellingPrice}
+          handleUnitChange={actions.handleUnitChange}
           onNewCalculation={() => {
             actions.clearAll();
             actions.setIsModalOpen(true);

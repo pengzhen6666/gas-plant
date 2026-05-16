@@ -224,7 +224,7 @@ export const EquipmentCatalog = ({
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <Package className="text-brand-primary" size={32} />
-            设备资产价值库
+            设备资产库
           </h1>
           <p className="text-slate-400 text-sm mt-1">设置常用设备的参考单价，用于自动估算商户资产。</p>
         </div>

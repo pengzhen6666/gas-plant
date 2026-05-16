@@ -660,10 +660,6 @@ function App() {
 
           {activeTab === 'equipment_prices' && (
             <div className="animate-slide-up">
-              <header className="mb-10">
-                <h1 className="text-3xl md:text-5xl font-black text-gradient tracking-tighter">设备资产库</h1>
-                <p className="text-slate-400 text-sm mt-2 font-medium">配置各项设备参考价值，实现资产自动化评估</p>
-              </header>
               <EquipmentCatalog 
                 catalog={equipmentCatalog}
                 presets={equipmentPresets}

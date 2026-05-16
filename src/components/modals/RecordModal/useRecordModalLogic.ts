@@ -14,6 +14,15 @@ interface Props {
   onUpdateSale: (id: string, data: any) => void | Promise<void>;
 }
 
+const parseBreakdown = (notes: string) => {
+  if (!notes || !notes.includes('BREAKDOWN:')) return null;
+  try {
+    return JSON.parse(notes.split('BREAKDOWN:')[1]);
+  } catch (e) {
+    return null;
+  }
+};
+
 export const useRecordModalLogic = ({ 
   isOpen, editData, prefillData, onClose, onAddTransaction, onAddSale, onUpdateTransaction, onUpdateSale 
 }: Props) => {
@@ -49,11 +58,12 @@ export const useRecordModalLogic = ({
     taxFeeFixed: '',
     handlingFeeMode: 'percent' as 'percent' | 'fixed',
     taxFeeMode: 'percent' as 'percent' | 'fixed',
-    shippingFee: '700',
+    shippingFee: '0',
     useHandlingFee: false,
     useTaxFee: false,
     isManualShipping: false,
-    isAuto: false
+    isAuto: false,
+    distributeShipping: false
   });
 
   const [fuelPresets, setFuelPresets] = useState<{ name: string, density: number }[]>([]);
@@ -129,6 +139,27 @@ export const useRecordModalLogic = ({
            const up = (editData.amount / qtyNum).toFixed(2).replace(/\.?0+$/, '');
            setFormData(prev => ({...prev, unit_price: up}));
         }
+
+        const bd = parseBreakdown(editData.notes || '');
+        setPurchaseDetails({
+          oilBasePrice: bd?.oilBasePrice || '',
+          barrelCost: bd?.barrelCost || '300',
+          barrelCount: bd?.barrelCount || '0',
+          density: bd?.density || '0.85',
+          priceUnit: bd?.priceUnit || 'ton',
+          handlingRate: bd?.handlingRate || '0.3',
+          taxRate: bd?.taxRate || '1.0',
+          handlingFeeFixed: bd?.handlingFeeFixed || '',
+          taxFeeFixed: bd?.taxFeeFixed || '',
+          handlingFeeMode: bd?.handlingFeeMode || 'percent',
+          taxFeeMode: bd?.taxFeeMode || 'percent',
+          useHandlingFee: bd?.useHandlingFee || false,
+          useTaxFee: bd?.useTaxFee || false,
+          shippingFee: (editData.shipping_fee ?? bd?.shippingFee ?? '').toString(),
+          distributeShipping: bd?.distributeShipping ?? true,
+          isAuto: bd?.isAuto ?? true,
+          isManualShipping: bd?.isManualShipping ?? false
+        });
       }
     } else if (prefillData) {
       setFormData({
@@ -178,11 +209,12 @@ export const useRecordModalLogic = ({
         taxFeeFixed: '',
         handlingFeeMode: 'percent',
         taxFeeMode: 'percent',
-        shippingFee: '700',
+        shippingFee: '0',
         useHandlingFee: false,
         useTaxFee: false,
         isManualShipping: false,
-        isAuto: false
+        isAuto: false,
+        distributeShipping: false
       });
     }
 
@@ -241,6 +273,8 @@ export const useRecordModalLogic = ({
         }
       }
       
+      const procurementTotal = oilTotal + barrelTotal + handlingFee + taxFee;
+      
       let calculatedShipping = parseFloat(purchaseDetails.shippingFee) || 0;
       if (!purchaseDetails.isManualShipping) {
         calculatedShipping = 700;
@@ -253,11 +287,9 @@ export const useRecordModalLogic = ({
         }
       }
       
-      const total = oilTotal + barrelTotal + handlingFee + taxFee + calculatedShipping;
-      
-      const newAmount = total.toFixed(2).replace(/\.?0+$/, '');
+      const newAmount = procurementTotal.toFixed(2).replace(/\.?0+$/, '');
       const newQty = weightKg.toFixed(0);
-      const effectiveUP = weightKg > 0 ? (total / weightKg).toFixed(2).replace(/\.?0+$/, '') : '';
+      const effectiveUP = weightKg > 0 ? (procurementTotal / weightKg).toFixed(2).replace(/\.?0+$/, '') : '';
 
       if (formData.amount !== newAmount || formData.quantity !== newQty || formData.unit_price !== effectiveUP) {
         setFormData(prev => ({ 
@@ -276,14 +308,25 @@ export const useRecordModalLogic = ({
     const up = parseFloat(formData.unit_price);
     const qty = parseFloat(formData.quantity);
     if (!isNaN(up) && !isNaN(qty) && up > 0 && qty > 0) {
-      const total = (up * qty).toFixed(2).replace(/\.?0+$/, '');
+      const totalNum = up * qty;
+      const totalStr = totalNum.toFixed(2).replace(/\.?0+$/, '');
+      
       if (formData.type === '销售录入') {
-        if (formData.total_price !== total) setFormData(prev => ({...prev, total_price: total}));
-      } else if (formData.type === '燃油采购' || formData.type === '设备采购') {
+        if (formData.total_price !== totalStr) setFormData(prev => ({...prev, total_price: totalStr}));
+      } else if (formData.type === '燃油采购') {
+        if (formData.amount !== totalStr) setFormData(prev => ({...prev, amount: totalStr}));
+      } else if (formData.type === '设备采购') {
+        const total = totalNum.toFixed(2).replace(/\.?0+$/, '');
         if (formData.amount !== total) setFormData(prev => ({...prev, amount: total}));
       }
+    } else if (formData.type === '设备采购' && !purchaseDetails.isAuto) {
+       // Just handle amount based on unit price/qty
+       const upNum = parseFloat(formData.unit_price) || 0;
+       const qtyNum = parseFloat(formData.quantity) || 0;
+       const total = (upNum * qtyNum).toFixed(2).replace(/\.?0+$/, '');
+       if (formData.amount !== total) setFormData(prev => ({...prev, amount: total}));
     }
-  }, [formData.unit_price, formData.quantity, formData.type, formData.total_price, formData.amount, purchaseDetails.isAuto, isOpen]);
+  }, [formData.unit_price, formData.quantity, formData.type, formData.total_price, formData.amount, purchaseDetails.isAuto, purchaseDetails.shippingFee, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -323,11 +366,16 @@ export const useRecordModalLogic = ({
         // Clean existing breakdown from notes if any, then append new one
         const cleanNotes = (formData.notes || '').split('BREAKDOWN:')[0].trim();
         finalNotes = cleanNotes ? `${cleanNotes}\n${breakdownStr}` : breakdownStr;
+      } else if (formData.type === '设备采购' && parseFloat(purchaseDetails.shippingFee) > 0) {
+        const breakdownStr = `BREAKDOWN:${JSON.stringify({ shippingFee: purchaseDetails.shippingFee, distributeShipping: purchaseDetails.distributeShipping })}`;
+        const cleanNotes = (formData.notes || '').split('BREAKDOWN:')[0].trim();
+        finalNotes = cleanNotes ? `${cleanNotes}\n${breakdownStr}` : breakdownStr;
       }
       const txData = {
         type: formData.type,
         title: formData.title,
         amount: Number(formData.amount),
+        shipping_fee: (formData.type === '燃油采购' || formData.type === '设备采购') ? (Number(purchaseDetails.shippingFee) || 0) : 0,
         date: formData.date,
         quantity: formData.type === '燃油采购' ? `${formData.quantity}kg` : (formData.type === '设备采购' ? `${formData.quantity}个` : formData.quantity),
         notes: finalNotes,

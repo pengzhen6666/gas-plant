@@ -136,18 +136,18 @@ export const useFuelCalculator = () => {
   };
 
   const applyHistoryRecord = (q: FuelQuote) => {
-    setDensity(String(q.density || '0.85'));
-    setFactoryQuote(String(q.factory_price || ''));
-    setTotalCost(String(q.total_cost || ''));
-    setTotalQty(String(q.total_qty || ''));
+    setDensity(q.density?.toString() || '0.85');
+    setFactoryQuote(q.factory_price?.toString() || '');
+    setTotalCost(q.total_cost?.toString() || '');
+    setTotalQty(q.total_qty?.toString() || '');
     setBatchUnit(q.batch_unit || 'ton');
-    setShippingFee(String(q.shipping_fee || ''));
-    setPackagingFee(String(q.packaging_fee || ''));
-    setSellingPrice(String(q.selling_price || ''));
+    setShippingFee(q.shipping_fee?.toString() || '');
+    setPackagingFee(q.packaging_fee?.toString() || '');
+    setSellingPrice(q.selling_price?.toString() || '');
     setUnitType(q.unit_type || 'kg');
     setNotes(q.notes || '');
     setRecordDate(q.date || new Date().toISOString().split('T')[0]);
-    setBarrelVol(String(q.barrel_vol || '1000'));
+    setBarrelVol(q.barrel_vol?.toString() || '1000');
     setEditingId(q.id);
     setIsModalOpen(true);
   };
