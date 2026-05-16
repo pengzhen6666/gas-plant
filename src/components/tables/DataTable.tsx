@@ -143,8 +143,8 @@ export const DataTable = ({ data, title, filterType, isLoading, onEdit, onDelete
           } else if (diffDays <= 5) { // Only allow up to 5 days for cross-date COD
             // For cross-date, we need Manufacturer AND a specific product word (not just mfr)
             const productPart = eTitle.replace(eMfrLower, '').trim();
-            const productWords = productPart.split(/[\s/／-]/).filter(w => w.length >= 2);
-            const hasProductWord = productWords.some(w => fNotes.includes(w));
+            const productWords = productPart.split(/[\s/／-]/).filter((w: string) => w.length >= 2);
+            const hasProductWord = productWords.some((w: string) => fNotes.includes(w));
             noteMatch = fNotes.includes(eMfrLower) && hasProductWord;
           }
         }

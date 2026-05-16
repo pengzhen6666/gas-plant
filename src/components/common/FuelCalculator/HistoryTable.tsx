@@ -1,6 +1,6 @@
-import { History as HistoryIcon, Calculator, Loader2, TrendingUp, Trash2, ChevronUp, ChevronDown, DollarSign, Wallet } from 'lucide-react';
+import { History as HistoryIcon, Calculator, Loader2, TrendingUp, Trash2, ChevronUp, ChevronDown, DollarSign } from 'lucide-react';
 import type { FuelQuote } from '../../../types/index';
-import { priceLToKg, priceJinToKg, priceKgToL, priceKgToJin } from '../../../utils/index';
+import { priceKgToL, priceKgToJin } from '../../../utils/index';
 
 interface HistoryTableProps {
   quotes: FuelQuote[];
