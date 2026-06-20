@@ -19,7 +19,7 @@ export const ExpandableMerchantRow = ({ merchant, transactions }: { merchant: Me
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${merchant.total_debt > 0 ? 'bg-rose-400/10 text-rose-400' : 'bg-emerald-400/10 text-emerald-400'}`}>
+          <div className="p-2 rounded-lg bg-brand-primary/10 text-brand-primary">
             <Users size={18} />
           </div>
           <div className="min-w-0">
@@ -34,15 +34,8 @@ export const ExpandableMerchantRow = ({ merchant, transactions }: { merchant: Me
         </div>
         <div className="flex items-center gap-2 md:gap-4 shrink-0">
           <div className="text-right">
-            <div className={`font-bold whitespace-nowrap ${merchant.total_debt > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-              {merchant.total_debt > 0 ? (
-                <div className="flex items-center gap-1 justify-end">
-                  <span className="text-[10px] font-medium opacity-80">欠</span>
-                  <span className="text-base md:text-lg">¥{merchant.total_debt.toLocaleString()}</span>
-                </div>
-              ) : (
-                <span className="text-sm">已结清</span>
-              )}
+            <div className="font-bold whitespace-nowrap text-brand-primary text-base md:text-lg">
+              ¥{merchant.total_amount.toLocaleString()}
             </div>
             <p className="text-[10px] text-slate-500">累计用油: {merchant.total_quantity}kg</p>
           </div>

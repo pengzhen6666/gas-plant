@@ -190,31 +190,33 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 gap-3">
-                  <div className="flex bg-black/40 p-1 rounded-xl border border-white/5 overflow-x-auto scrollbar-hide">
+                  <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest">已存油品种类 (点击加载)</label>
+                  <div className="flex flex-wrap gap-2 p-2 bg-black/30 rounded-2xl border border-white/5 max-h-[120px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
                     {states.fuelTypes.map((t: any) => (
-                      <div key={t.name} className="relative group/type">
+                      <div key={t.id || t.name} className={`relative flex items-center bg-white/5 border rounded-xl px-3 py-1.5 transition-all text-xs font-black text-white group/preset ${states.notes === t.name ? 'border-brand-primary/50 bg-brand-primary/5' : 'border-white/10 hover:border-white/20'}`}>
                         <button
+                          type="button"
                           onClick={() => {
                             actions.setNotes(t.name);
                             actions.setDensity(String(t.density));
                           }}
-                          className={`px-6 py-2 text-[10px] font-black rounded-lg transition-all whitespace-nowrap ${states.notes === t.name ? 'bg-brand-primary text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                          className="text-left hover:text-brand-primary transition-all text-[11px]"
                         >
-                          {t.name}
+                          {t.name} <span className="text-[9px] text-slate-500 font-normal">({t.density})</span>
                         </button>
-                        {states.fuelTypes.length > 2 && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              actions.setFuelTypes(states.fuelTypes.filter((ft: any) => ft.name !== t.name));
-                            }}
-                            className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center scale-0 group-hover/type:scale-100 transition-transform text-[8px]"
-                          >
-                            <X size={8} />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => actions.deletePreset(t.id || t.name)}
+                          className="ml-2 w-4 h-4 rounded-full bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white flex items-center justify-center transition-all text-[9px]"
+                          title="删除此模板"
+                        >
+                          <X size={8} />
+                        </button>
                       </div>
                     ))}
+                    {states.fuelTypes.length === 0 && (
+                      <div className="text-[10px] text-slate-600 font-bold p-1">暂无油品模板，输入品名及密度后可存为模板</div>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <input type="date" value={states.recordDate} onChange={e => actions.setRecordDate(e.target.value)} className="w-[110px] bg-white/5 border border-white/5 rounded-xl px-3 py-2 text-white text-[10px] font-black focus:outline-none" />
@@ -228,9 +230,10 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
                       />
                       {!states.fuelTypes.find((t: any) => t.name === states.notes) && states.notes && states.density && (
                         <button
+                          type="button"
                           onClick={() => {
                             if (states.notes && !isNaN(Number(states.density))) {
-                              actions.setFuelTypes([...states.fuelTypes, { name: states.notes, density: Number(states.density) }]);
+                              actions.addPreset(states.notes, Number(states.density));
                             }
                           }}
                           className="px-3 py-2 bg-emerald-400 text-black text-[9px] font-black rounded-xl hover:bg-emerald-300 transition-all active:scale-95 whitespace-nowrap"

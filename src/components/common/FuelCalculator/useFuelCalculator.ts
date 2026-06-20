@@ -28,14 +28,8 @@ export const useFuelCalculator = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>('全部');
-  const [fuelTypes, setFuelTypes] = useState<{ name: string, density: number }[]>(() => {
-    const saved = localStorage.getItem('fuel_presets');
-    return saved ? JSON.parse(saved) : [
-      { name: '宁煤液蜡2号', density: 0.778 },
-      { name: '桉燃3号油', density: 0.771 },
-      { name: '桉燃6号油', density: 0.93 }
-    ];
-  });
+  const [fuelTypes, setFuelTypes] = useState<{ id?: string, name: string, density: number }[]>([]);
+  const [useSupabasePresets, setUseSupabasePresets] = useState<boolean>(false);
 
   // Density Helper States
   const [helperKg, setHelperKg] = useState<string>('');
@@ -56,12 +50,67 @@ export const useFuelCalculator = () => {
   });
 
   useEffect(() => {
-    localStorage.setItem('fuel_presets', JSON.stringify(fuelTypes));
-  }, [fuelTypes]);
-
-  useEffect(() => {
+    loadPresets();
     fetchQuotes();
   }, []);
+
+  const loadPresets = async () => {
+    try {
+      const { data, error } = await supabase.from('fuel_presets').select('*').order('name');
+      if (error) {
+        throw error;
+      }
+      setFuelTypes(data || []);
+      setUseSupabasePresets(true);
+    } catch (e) {
+      const saved = localStorage.getItem('fuel_presets');
+      const fallback = saved ? JSON.parse(saved) : [
+        { name: '宁煤液蜡2号', density: 0.778 },
+        { name: '桉燃3号油', density: 0.771 },
+        { name: '桉燃6号油', density: 0.93 }
+      ];
+      setFuelTypes(fallback);
+      setUseSupabasePresets(false);
+    }
+  };
+
+  const addPreset = async (name: string, density: number) => {
+    if (!name || isNaN(density)) return;
+    const newPreset = { name, density };
+    if (useSupabasePresets) {
+      try {
+        const { data, error } = await supabase.from('fuel_presets').insert([newPreset]).select();
+        if (error) throw error;
+        if (data) {
+          setFuelTypes(prev => [...prev, data[0]]);
+          return;
+        }
+      } catch (e) {
+        console.error('Error adding preset to supabase:', e);
+      }
+    }
+    // Local fallback
+    const updated = [...fuelTypes, newPreset];
+    setFuelTypes(updated);
+    localStorage.setItem('fuel_presets', JSON.stringify(updated));
+  };
+
+  const deletePreset = async (nameOrId: string) => {
+    if (useSupabasePresets) {
+      try {
+        const { error } = await supabase.from('fuel_presets').delete().or(`id.eq.${nameOrId},name.eq.${nameOrId}`);
+        if (error) throw error;
+        setFuelTypes(prev => prev.filter(t => t.id !== nameOrId && t.name !== nameOrId));
+        return;
+      } catch (e) {
+        console.error('Error deleting preset from supabase:', e);
+      }
+    }
+    // Local fallback
+    const updated = fuelTypes.filter(t => t.name !== nameOrId && t.id !== nameOrId);
+    setFuelTypes(updated);
+    localStorage.setItem('fuel_presets', JSON.stringify(updated));
+  };
 
   const fetchQuotes = async () => {
     if (quotes.length === 0) setIsLoading(true);
@@ -305,7 +354,8 @@ export const useFuelCalculator = () => {
       setEditingId, setIsSaving, setIsLoading, setIsModalOpen, setFilterCategory,
       setFuelTypes, setHelperKg, setHelperL,
       saveQuote, deleteQuote, applyHistoryRecord, clearAll,
-      applyTonBarrel, applyDensityHelper, handleUnitChange
+      applyTonBarrel, applyDensityHelper, handleUnitChange,
+      addPreset, deletePreset
     }
   };
 };
